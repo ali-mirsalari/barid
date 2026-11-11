@@ -27,7 +27,17 @@ object Delivery {
     suspend fun run(context: Context): Outcome = mutex.withLock {
         withContext(Dispatchers.IO) {
             val app = context.applicationContext
-            deliver(app).also { ActivityLog(app).settle(MessageQueue(app).ids()) }
+            // A bug must never take the app down or lose messages: it is recorded as a failed try.
+            val outcome = try {
+                deliver(app)
+            } catch (e: Exception) {
+                Settings(app).lastError = e.javaClass.simpleName
+                Outcome.Failed(0, e.javaClass.simpleName)
+            } catch (e: LinkageError) {
+                Settings(app).lastError = e.javaClass.simpleName
+                Outcome.Failed(0, e.javaClass.simpleName)
+            }
+            outcome.also { ActivityLog(app).settle(MessageQueue(app).ids()) }
         }
     }
 

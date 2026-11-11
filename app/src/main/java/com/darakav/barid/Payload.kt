@@ -37,5 +37,6 @@ object Payload {
         return PLACEHOLDER.replace(template) { m -> values[m.groupValues[1]] ?: m.value }
     }
 
-    private val PLACEHOLDER = Regex("\\{\\{(from|text|receivedStamp|receivedAt)}}")
+    // Every brace escaped: Android's ICU regex engine rejects a bare "}" that desktop Java accepts.
+    private val PLACEHOLDER = Regex("\\{\\{(from|text|receivedStamp|receivedAt)\\}\\}")
 }
