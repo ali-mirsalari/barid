@@ -1,37 +1,125 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Barid</string>
-    <string name="intro">Forwards your bank transaction SMS to Darakav, where you confirm them into your accounts. One-time passwords and personal messages never leave this phone.</string>
-    <string name="pair_steps">In Darakav, open Bank SMS → Phones → Connect a phone, choose this app and create a key. Then scan the QR code, or paste the setup code below.</string>
-    <string name="scan">Scan QR code</string>
-    <string name="scan_prompt">Scan the QR code shown in Darakav</string>
-    <string name="code_hint">Setup code (darakav-sms:1:…)</string>
-    <string name="connect">Connect</string>
-    <string name="invalid_code">This is not a Darakav setup code. Create a new phone key in Darakav and try again.</string>
-    <string name="replace_title">Replace the connection?</string>
-    <string name="replace_message">This phone is already connected. Use the new key instead? Messages not yet sent are discarded.</string>
-    <string name="replace_action">Replace</string>
-    <string name="device_line">%1$s · %2$s</string>
-    <string name="insecure">This connection is not encrypted (http). Use it only for testing on your own network.</string>
-    <string name="allow_sms">Allow receiving SMS</string>
-    <string name="battery">Allow running in the background</string>
-    <string name="test">Test connection</string>
-    <string name="testing">Checking the connection…</string>
-    <string name="test_ok">Connected to Darakav.</string>
-    <string name="test_rejected">Darakav does not accept this phone\'s key any more. Connect the phone again.</string>
-    <string name="test_failed">Darakav could not be reached. Messages wait on the phone and are sent when it is back.</string>
-    <string name="import_recent">Import bank SMS from the last 60 days</string>
-    <string name="import_needs_permission">Importing needs permission to read your SMS.</string>
-    <string name="import_done">%1$d bank messages queued. Darakav skips ones it already has.</string>
-    <string name="disconnect">Disconnect</string>
+
+    <!-- Welcome -->
+    <string name="welcome_tagline">Your bank SMS, delivered to your finance app. Privately.</string>
+    <string name="promise_bank_title">Only bank transactions</string>
+    <string name="promise_bank_body">Everything else stays on your phone.</string>
+    <string name="promise_otp_title">Never one-time codes</string>
+    <string name="promise_otp_body">OTPs are dropped before anything is sent.</string>
+    <string name="promise_queue_title">Nothing gets lost</string>
+    <string name="promise_queue_body">Offline? Messages wait and send later.</string>
+    <string name="action_connect">Connect</string>
+    <string name="made_by">Made by Darakav · Open source</string>
+
+    <!-- Connect -->
+    <string name="cd_back">Back</string>
+    <string name="connect_hint">In Darakav, open Bank SMS → Phones → Connect a phone, then point the camera at the code.</string>
+    <string name="paste_code_hint">Or paste a setup code</string>
+    <string name="action_paste">Paste</string>
+    <string name="invalid_code">This isn\'t a setup code. Create a new one in Darakav and try again.</string>
+    <string name="other_server_title">Use another server</string>
+    <string name="other_server_body">Your own address, header and message format</string>
+    <string name="coming_soon">Soon</string>
+    <string name="camera_off_title">Camera is off</string>
+    <string name="camera_off_body">Allow the camera to scan the code, or paste the setup code below.</string>
+    <string name="action_allow_camera">Allow camera</string>
+
+    <!-- Home -->
+    <string name="cd_settings">Settings</string>
+    <string name="status_forwarding">Forwarding</string>
+    <string name="status_waiting_network">Waiting to send</string>
+    <string name="status_needs_sms">Needs SMS access</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="darakav">Darakav</string>
+    <string name="connected_to">Connected to %1$s</string>
+    <string name="stat_sent_today">Sent today</string>
+    <string name="stat_waiting">Waiting</string>
+    <string name="stat_last_sent">Last sent</string>
+    <string name="rel_now">now</string>
+    <string name="rel_minutes">%1$sm</string>
+    <string name="rel_hours">%1$sh</string>
+    <string name="rel_days">%1$sd</string>
+    <string name="card_sms_title">Allow SMS access</string>
+    <string name="card_sms_body">Barid reads incoming SMS only to pick out bank transactions. Nothing else leaves your phone.</string>
+    <string name="action_allow_sms">Allow SMS access</string>
+    <string name="card_battery_title">Keep Barid running</string>
+    <string name="card_battery_body">Your phone may pause apps to save battery, and bank messages would wait until you open Barid.</string>
+    <string name="action_allow">Allow</string>
+    <string name="action_autostart">Turn on Autostart</string>
+    <string name="card_rejected_title">This phone was disconnected</string>
+    <string name="card_rejected_body">The server no longer accepts this phone\'s key. Connect again to keep forwarding.</string>
+    <string name="action_connect_again">Connect again</string>
+    <string name="recent">Recent</string>
+    <string name="see_all">See all</string>
+    <string name="recent_empty_title">No bank messages yet</string>
+    <string name="recent_empty_body">New ones appear here as they arrive. You can also import the last 60 days.</string>
+    <string name="kind_deposit">Deposit</string>
+    <string name="kind_withdrawal">Withdrawal</string>
+    <string name="kind_bank_message">Bank message</string>
+    <string name="entry_sent">Sent</string>
+    <string name="entry_waiting">Waiting</string>
+    <string name="entry_skipped">Not accepted</string>
+    <string name="unit_rial">rial</string>
+    <string name="unit_toman">toman</string>
+    <string name="action_import">Import 60 days</string>
+    <string name="action_test">Test connection</string>
+    <string name="paired_ok">Connected. New bank SMS will be forwarded.</string>
+    <string name="test_ok">The server is reachable and accepts this phone.</string>
+    <string name="test_rejected">The server no longer accepts this phone. Connect again.</string>
+    <string name="test_failed">The server can\'t be reached right now. Messages wait on the phone and send later.</string>
+    <plurals name="import_done">
+        <item quantity="one">%d bank message queued.</item>
+        <item quantity="other">%d bank messages queued.</item>
+    </plurals>
+    <string name="import_none">No new bank messages from the last 60 days.</string>
+    <string name="import_needs_permission">Importing needs access to your SMS inbox.</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="theme">Theme</string>
+    <string name="option_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="color">Color</string>
+    <string name="palette_you">Material You</string>
+    <string name="palette_you_note">from your wallpaper</string>
+    <string name="palette_slate">Slate</string>
+    <string name="palette_ocean">Ocean</string>
+    <string name="palette_iris">Iris</string>
+    <string name="palette_teal">Teal</string>
+    <string name="palette_clay">Clay</string>
+    <string name="palette_forest">Forest</string>
+    <string name="reduce_transparency">Reduce transparency</string>
+    <string name="reduce_transparency_body">Solid surfaces instead of glass</string>
+    <string name="section_language">Language</string>
+    <string name="app_language">App language</string>
+    <string name="section_connection">Connection</string>
+    <string name="key_hint">key %1$s</string>
+    <string name="unencrypted_warning">This connection isn\'t encrypted (http). Use it only on your own network for testing.</string>
+    <string name="connect_other">Connect to a different server</string>
+    <string name="disconnect">Disconnect this phone</string>
     <string name="disconnect_title">Disconnect this phone?</string>
-    <string name="disconnect_message">New bank SMS will no longer be sent to Darakav. Also remove the phone in Darakav → Bank SMS → Phones.</string>
-    <string name="state_active">Forwarding new bank SMS.</string>
-    <string name="state_no_permission">Not forwarding: allow receiving SMS.</string>
-    <string name="state_rejected">Stopped: the key was removed in Darakav. Connect the phone again.</string>
-    <string name="last_sent">Last sent %1$s · %2$d messages so far</string>
-    <string name="nothing_sent">Nothing sent yet.</string>
-    <string name="pending">%1$d waiting to be sent</string>
-    <string name="last_problem">Last problem: %1$s</string>
-    <string name="privacy">Only messages that look like bank transactions are sent, over the connection shown above. The key is stored only in this app and is not included in backups.</string>
+    <string name="disconnect_body">New bank SMS will no longer be forwarded, and waiting messages are deleted from this phone. Also remove the phone on the server (in Darakav: Bank SMS → Phones).</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="about_title">Privacy &amp; open source</string>
+    <string name="version_line">Version %1$s · GPL-3.0</string>
+
+    <!-- Recent -->
+    <string name="activity_title">Recent messages</string>
+
+    <!-- About -->
+    <string name="section_privacy">What Barid sends and keeps</string>
+    <string name="about_privacy_1">Only bank transaction messages are sent, and only to the server you connected.</string>
+    <string name="about_privacy_2">One-time passwords, verification codes and messages from personal numbers never leave the phone.</string>
+    <string name="about_privacy_3">Message text is kept only until it is delivered. The Recent list stores bank, amount and time, never the text.</string>
+    <string name="about_privacy_4">No ads, no analytics, no Barid server. The connection key is excluded from backups.</string>
+    <string name="section_open_source">Open source</string>
+    <string name="about_open_source_body">Barid is free software under the GNU GPL v3.0. Anyone can read the code and check these promises.</string>
+    <string name="action_view_source">View the source code</string>
+    <string name="section_licenses">Licenses</string>
+    <string name="made_by_darakav">Made by Darakav</string>
 </resources>

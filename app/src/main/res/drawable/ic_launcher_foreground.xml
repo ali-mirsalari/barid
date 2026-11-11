@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Barid's envelope in Darakav's two blues, inside the adaptive-icon safe zone. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
-    <path android:fillColor="#FFFFFF"
-        android:pathData="M34,36h40a4,4 0,0 1,4 4v24a4,4 0,0 1,-4 4H50l-12,10V68h-4a4,4 0,0 1,-4 -4V40a4,4 0,0 1,4 -4z" />
-    <path android:fillColor="#0069FE" android:pathData="M42,47h24v4H42zM42,55h16v4H42z" />
+    <group android:translateX="24" android:translateY="24" android:scaleX="1.25" android:scaleY="1.25">
+        <path android:fillColor="#0069FE" android:pathData="M6,14q0,-4 4,-4h28q4,0 4,4v3L24,28 6,17z" />
+        <path android:fillColor="#00A4FE" android:pathData="M6,22l18,11 18,-11v12q0,4 -4,4H10q-4,0 -4,-4z" />
+    </group>
 </vector>

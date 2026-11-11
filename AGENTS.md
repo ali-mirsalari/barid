@@ -14,5 +14,8 @@ Barid (برید) is an open-source (GPL-3.0) Android app that forwards Iranian b
 
 ## State
 
-- 2026-11-11: imported from Darakav's `android/` app (fresh history) and renamed. Next: full redesign (Darakav design language with glass surfaces, Material You dynamic color plus Darakav's preset color themes, English/Persian RTL), then support for any server (custom URL, header and payload) and a public pairing-QR spec.
+- 2026-11-11: imported from Darakav's `android/` app (fresh history) and renamed; then fully redesigned in Jetpack Compose (owner-approved direction): Welcome, Connect (CameraX + ZXing scanner), Home (status, counts, Recent, battery and SMS-permission cards), Settings (theme, Material You + Darakav presets, reduce transparency, language), Recent, Privacy & open source.
+- Design source of truth: Darakav's frontend tokens (`frontend/src/styles.css`, `palette-state.ts` in the Darakav repo), mirrored in `ui/theme/Theme.kt`. Glass = Haze blur + translucent tint + bright top edge (`ui/components/Surfaces.kt`).
+- Visual check without a phone: Paparazzi 1.3.5 renders Compose screens on the JVM (layoutlib comes from Google Maven, use the mirror). Force `LocalLayoutDirection` to RTL for Persian; Paparazzi does not apply it to Compose.
+- Next: support for any server (custom URL, header and payload) and a public pairing-QR spec. The connect sheet already shows "Use another server" as Soon.
 - Before making the repository public: set the website (https://darakav.com) and topics, turn off Projects, allow squash merging only, auto-delete head branches, enable Dependabot alerts, private vulnerability reporting and secret scanning.

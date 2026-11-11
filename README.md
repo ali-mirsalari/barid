@@ -5,7 +5,7 @@
 
 Barid is a small Android app that watches incoming SMS, keeps only bank transaction messages and sends them to a server you pair with. One-time passwords and personal messages never leave the phone. It is made by [Darakav](https://darakav.com), which is built in as a one-scan option.
 
-> Status: early. The first public release, with a full redesign and support for any server, is in progress.
+> Status: early. Support for servers other than Darakav is next.
 
 ## What it does
 
@@ -14,7 +14,13 @@ Barid is a small Android app that watches incoming SMS, keeps only bank transact
 - **Works while closed:** a manifest `SMS_RECEIVED` receiver; multipart messages are joined.
 - **Never loses a message:** a file queue in app storage (up to 2,000) and a WorkManager job that sends batches when online, with exponential backoff. It stops when the server rejects the key. Servers are expected to ignore repeats, so retries are safe.
 - **Imports history:** optional (needs `READ_SMS`), bank messages from the last 60 days.
+- **Shows what happened:** a Recent list with bank, deposit or withdrawal, amount and whether it was sent. It is read on the phone for display and never keeps the message text.
+- **Stays running:** asks to be exempt from battery optimization, with a shortcut to Xiaomi's Autostart list, since those are the usual reasons forwarding silently stops.
 - **Keeps the key private:** app-private storage, excluded from backups and device transfer.
+
+## Design
+
+Darakav's design language: an aurora backdrop with a faint grid, frosted-glass surfaces (real blur on Android 12+, near-solid below) and Darakav's navy brand tile. Colors: Material You from the wallpaper (Android 12+) or Darakav's presets Slate, Ocean, Iris, Teal, Clay and Forest, in light and dark, plus a Reduce transparency switch. English and Persian with full right-to-left layout, Persian digits and the Jalali calendar, Vazirmatn bundled. Built with Jetpack Compose and Material 3; QR codes are read with CameraX and ZXing, so no Google Play services are needed.
 
 Requirements: Android 8.0+ (API 26).
 

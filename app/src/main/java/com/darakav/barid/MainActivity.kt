@@ -1,61 +1,101 @@
 package com.darakav.barid
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
 import android.provider.Settings as AndroidSettings
-import android.text.format.DateUtils
-import android.view.View
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
+import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
-import java.util.concurrent.Executors
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
+import androidx.core.view.WindowCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.darakav.barid.ui.Snapshot
+import com.darakav.barid.ui.components.Backdrop
+import com.darakav.barid.ui.components.LocalHazeState
+import com.darakav.barid.ui.components.glass
+import com.darakav.barid.ui.screens.AboutScreen
+import com.darakav.barid.ui.screens.ActivityScreen
+import com.darakav.barid.ui.screens.ConnectScreen
+import com.darakav.barid.ui.screens.HomeScreen
+import com.darakav.barid.ui.screens.SettingsScreen
+import com.darakav.barid.ui.screens.WelcomeScreen
+import com.darakav.barid.ui.theme.Barid
+import com.darakav.barid.ui.theme.BaridTheme
+import com.darakav.barid.ui.theme.Palette
+import dev.chrisbanes.haze.HazeState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
-/** Pairing (QR code, setup code or darakav:// link) and the forwarding status. */
+private enum class Screen { WELCOME, CONNECT, HOME, SETTINGS, ABOUT, ACTIVITY }
+
+/** One activity, Compose screens. Messages are forwarded by [SmsReceiver] and [ForwardWorker], not here. */
 class MainActivity : AppCompatActivity() {
-    private lateinit var settings: Settings
-    private val io = Executors.newSingleThreadExecutor()
-
-    private val scan = registerForActivityResult(ScanContract()) { result ->
-        result.contents?.let { pair(it) }
-    }
-    private val receivePermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { render() }
-    private val readPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-        if (granted) importRecent() else toast(R.string.import_needs_permission)
-    }
+    private val settings by lazy { Settings(this) }
+    private var snapshot by mutableStateOf(Snapshot.Empty)
+    private var deepLink by mutableStateOf<Pairing?>(null)
+    private var deepLinkInvalid by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        settings = Settings(this)
-        findViewById<Button>(R.id.scan).setOnClickListener {
-            scan.launch(
-                ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                    .setPrompt(getString(R.string.scan_prompt)).setBeepEnabled(false).setOrientationLocked(false),
-            )
+        snapshot = Snapshot.load(this)
+        if (savedInstanceState == null) handle(intent)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                while (true) {
+                    refresh()
+                    delay(2_000)
+                }
+            }
         }
-        findViewById<Button>(R.id.connect).setOnClickListener {
-            pair(findViewById<EditText>(R.id.code).text.toString())
-        }
-        findViewById<Button>(R.id.allow_sms).setOnClickListener { receivePermission.launch(Manifest.permission.RECEIVE_SMS) }
-        findViewById<Button>(R.id.test).setOnClickListener { test() }
-        findViewById<Button>(R.id.import_recent).setOnClickListener {
-            if (granted(Manifest.permission.READ_SMS)) importRecent() else readPermission.launch(Manifest.permission.READ_SMS)
-        }
-        findViewById<Button>(R.id.battery).setOnClickListener {
-            startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
-        }
-        findViewById<Button>(R.id.disconnect).setOnClickListener { confirmDisconnect() }
-        handle(intent)
+        setContent { App() }
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -63,117 +103,198 @@ class MainActivity : AppCompatActivity() {
         handle(intent)
     }
 
-    override fun onResume() {
-        super.onResume()
-        render()
-    }
-
     private fun handle(intent: Intent?) {
-        val data: Uri = intent?.data ?: return
-        if (data.scheme == "darakav") pair(data.toString())
+        val data = intent?.data ?: return
+        if (data.scheme != "darakav") return
+        val pairing = Pairing.parse(data.toString())
+        if (pairing == null) deepLinkInvalid = true else deepLink = pairing
     }
 
-    private fun pair(input: String) {
-        val pairing = Pairing.parse(input)
-        if (pairing == null) {
-            toast(R.string.invalid_code)
-            return
+    private suspend fun refresh() {
+        snapshot = withContext(Dispatchers.IO) { Snapshot.load(applicationContext) }
+    }
+
+    @Composable
+    private fun App() {
+        var themeMode by remember { mutableStateOf(settings.themeMode) }
+        var palette by remember { mutableStateOf(Palette.of(settings.palette)) }
+        var solid by remember { mutableStateOf(settings.reduceTransparency) }
+        val language = remember { AppCompatDelegate.getApplicationLocales().toLanguageTags().substringBefore(',').substringBefore('-') }
+        var stackNames by rememberSaveable { mutableStateOf(if (snapshot.pairing == null) "WELCOME" else "HOME") }
+        val stack = stackNames.split(',').map { Screen.valueOf(it) }
+        fun go(screen: Screen) { stackNames = screen.name }
+        fun push(screen: Screen) { stackNames = "$stackNames,${screen.name}" }
+        fun pop() { if (stack.size > 1) stackNames = stack.dropLast(1).joinToString(",") { it.name } }
+        val screen = stack.last()
+
+        var message by remember { mutableStateOf<String?>(null) }
+        var importing by remember { mutableStateOf(false) }
+        var testing by remember { mutableStateOf(false) }
+        var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+        LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); delay(30_000) } }
+        val scope = rememberCoroutineScope()
+        val haptics = LocalHapticFeedback.current
+
+        fun test(afterPairing: Boolean = false) {
+            val pairing = settings.pairing ?: return
+            testing = true
+            scope.launch {
+                val result = withContext(Dispatchers.IO) { Forwarder.check(pairing) }
+                if (result == Forwarder.Result.Rejected) settings.rejected = true
+                message = getString(
+                    when (result) {
+                        Forwarder.Result.Ok -> if (afterPairing) R.string.paired_ok else R.string.test_ok
+                        Forwarder.Result.Rejected -> R.string.test_rejected
+                        else -> R.string.test_failed
+                    },
+                )
+                testing = false
+                refresh()
+            }
         }
-        val connect = {
-            MessageQueue(this).clear()
+
+        val smsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted && !shouldShowRequestPermissionRationale(Manifest.permission.RECEIVE_SMS)) openAppSettings()
+            scope.launch { refresh() }
+        }
+        fun runImport() {
+            importing = true
+            scope.launch {
+                val count = withContext(Dispatchers.IO) { runCatching { Backfill.run(applicationContext) }.getOrDefault(0) }
+                message = if (count > 0) resources.getQuantityString(R.plurals.import_done, count, count) else getString(R.string.import_none)
+                importing = false
+                refresh()
+            }
+        }
+        val readSmsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (granted) runImport() else message = getString(R.string.import_needs_permission)
+        }
+
+        fun paired(pairing: Pairing) {
             settings.pairing = pairing
-            findViewById<EditText>(R.id.code).setText("")
-            render()
-            if (!granted(Manifest.permission.RECEIVE_SMS)) receivePermission.launch(Manifest.permission.RECEIVE_SMS)
-            test()
+            haptics.performHapticFeedback(HapticFeedbackType.LongPress)
+            ForwardWorker.schedule(applicationContext)
+            go(Screen.HOME)
+            scope.launch {
+                refresh()
+                if (!Snapshot.granted(applicationContext, Manifest.permission.RECEIVE_SMS)) smsPermission.launch(Manifest.permission.RECEIVE_SMS)
+            }
+            test(afterPairing = true)
         }
-        val current = settings.pairing
-        if (current != null && current.key != pairing.key) {
-            AlertDialog.Builder(this).setTitle(R.string.replace_title).setMessage(R.string.replace_message)
-                .setPositiveButton(R.string.replace_action) { _, _ -> connect() }
-                .setNegativeButton(android.R.string.cancel, null).show()
-        } else connect()
-    }
+        LaunchedEffect(deepLink) { deepLink?.let { deepLink = null; paired(it) } }
+        LaunchedEffect(deepLinkInvalid) { if (deepLinkInvalid) { deepLinkInvalid = false; message = getString(R.string.invalid_code) } }
 
-    private fun test() {
-        val pairing = settings.pairing ?: return
-        status(getString(R.string.testing))
-        io.execute {
-            val result = Forwarder.check(pairing)
-            runOnUiThread {
-                when (result) {
-                    Forwarder.Result.Ok -> { settings.rejected = false; settings.lastError = null; toast(R.string.test_ok); ForwardWorker.schedule(this) }
-                    Forwarder.Result.Rejected -> { settings.rejected = true; toast(R.string.test_rejected) }
-                    else -> toast(R.string.test_failed)
+        BackHandler(enabled = stack.size > 1) { pop() }
+
+        BaridTheme(themeMode, palette, solid) {
+            val dark = Barid.colors.dark
+            val lightBars = !dark && screen != Screen.CONNECT
+            SideEffect {
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = lightBars
+                    isAppearanceLightNavigationBars = lightBars
                 }
-                render()
+            }
+            val haze = remember { HazeState() }
+            CompositionLocalProvider(LocalHazeState provides if (Barid.colors.solid) null else haze) {
+                Box(Modifier.fillMaxSize()) {
+                    Backdrop(haze)
+                    AnimatedContent(
+                        targetState = screen,
+                        transitionSpec = { (fadeIn(tween(220)) + slideInHorizontally(tween(260)) { it / 14 }) togetherWith fadeOut(tween(140)) },
+                        label = "screen",
+                    ) { target ->
+                        when (target) {
+                            Screen.WELCOME -> WelcomeScreen(onConnect = { push(Screen.CONNECT) })
+                            Screen.CONNECT -> ConnectScreen(canGoBack = stack.size > 1, onBack = { pop() }, onPaired = { paired(it) })
+                            Screen.HOME -> HomeScreen(
+                                state = snapshot, now = now, xiaomi = isXiaomi(), importing = importing, testing = testing,
+                                onSettings = { push(Screen.SETTINGS) },
+                                onSeeAll = { push(Screen.ACTIVITY) },
+                                onAllowSms = { smsPermission.launch(Manifest.permission.RECEIVE_SMS) },
+                                onBattery = { requestBatteryExemption() },
+                                onAutostart = { openAutostart() },
+                                onReconnect = { push(Screen.CONNECT) },
+                                onImport = {
+                                    if (Snapshot.granted(applicationContext, Manifest.permission.READ_SMS)) runImport()
+                                    else readSmsPermission.launch(Manifest.permission.READ_SMS)
+                                },
+                                onTest = { test() },
+                            )
+                            Screen.SETTINGS -> SettingsScreen(
+                                state = snapshot, themeMode = themeMode, palette = palette, reduceTransparency = solid, language = language,
+                                onBack = { pop() },
+                                onThemeMode = { themeMode = it; settings.themeMode = it },
+                                onPalette = { palette = it; settings.palette = it.id },
+                                onReduceTransparency = { solid = it; settings.reduceTransparency = it },
+                                onLanguage = { tag ->
+                                    AppCompatDelegate.setApplicationLocales(
+                                        if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag),
+                                    )
+                                },
+                                onAbout = { push(Screen.ABOUT) },
+                                onConnectOther = { push(Screen.CONNECT) },
+                                onDisconnect = {
+                                    settings.pairing = null
+                                    MessageQueue(applicationContext).clear()
+                                    ActivityLog(applicationContext).clear()
+                                    ForwardWorker.cancel(applicationContext)
+                                    go(Screen.WELCOME)
+                                    scope.launch { refresh() }
+                                },
+                            )
+                            Screen.ABOUT -> AboutScreen(onBack = { pop() })
+                            Screen.ACTIVITY -> ActivityScreen(snapshot.recent, onBack = { pop() })
+                        }
+                    }
+                    Toast(message, Modifier.align(Alignment.BottomCenter)) { message = null }
+                }
             }
         }
     }
 
-    private fun importRecent() {
-        io.execute {
-            val count = Backfill.run(this)
-            runOnUiThread {
-                toast(getString(R.string.import_done, count))
-                render()
-            }
-        }
-    }
-
-    private fun confirmDisconnect() {
-        AlertDialog.Builder(this).setTitle(R.string.disconnect_title).setMessage(R.string.disconnect_message)
-            .setPositiveButton(R.string.disconnect) { _, _ ->
-                settings.pairing = null
-                MessageQueue(this).clear()
-                render()
-            }
-            .setNegativeButton(android.R.string.cancel, null).show()
-    }
-
-    private fun render() {
-        val pairing = settings.pairing
-        findViewById<View>(R.id.pair_group).visibility = if (pairing == null) View.VISIBLE else View.GONE
-        findViewById<View>(R.id.status_group).visibility = if (pairing == null) View.GONE else View.VISIBLE
-        if (pairing == null) return
-        findViewById<TextView>(R.id.device).text = getString(R.string.device_line, pairing.label, Uri.parse(pairing.url).host ?: pairing.url)
-        findViewById<TextView>(R.id.insecure).visibility = if (pairing.encrypted) View.GONE else View.VISIBLE
-        val smsAllowed = granted(Manifest.permission.RECEIVE_SMS)
-        findViewById<View>(R.id.allow_sms).visibility = if (smsAllowed) View.GONE else View.VISIBLE
-        val battery = (getSystemService(POWER_SERVICE) as PowerManager).isIgnoringBatteryOptimizations(packageName)
-        findViewById<View>(R.id.battery).visibility = if (battery) View.GONE else View.VISIBLE
-        val pending = MessageQueue(this).size()
-        val last = settings.lastSentAt
-        val lines = buildList {
-            add(
-                when {
-                    settings.rejected -> getString(R.string.state_rejected)
-                    !smsAllowed -> getString(R.string.state_no_permission)
-                    else -> getString(R.string.state_active)
-                },
+    @Composable
+    private fun Toast(text: String?, modifier: Modifier, onDone: () -> Unit) {
+        LaunchedEffect(text) { if (text != null) { delay(3_500); onDone() } }
+        AnimatedVisibility(
+            visible = text != null,
+            enter = fadeIn() + slideInVertically { it / 2 },
+            exit = fadeOut() + slideOutVertically { it / 2 },
+            modifier = modifier.navigationBarsPadding().padding(16.dp).fillMaxWidth(),
+        ) {
+            val c = Barid.colors
+            Text(
+                text.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = c.text,
+                modifier = Modifier.glass(c, LocalHazeState.current, RoundedCornerShape(16.dp), strong = true)
+                    .padding(horizontal = 16.dp, vertical = 13.dp),
             )
-            add(
-                if (last > 0) getString(R.string.last_sent, DateUtils.getRelativeTimeSpanString(last), settings.sentCount)
-                else getString(R.string.nothing_sent),
-            )
-            if (pending > 0) add(getString(R.string.pending, pending))
-            settings.lastError?.let { add(getString(R.string.last_problem, it)) }
         }
-        status(lines.joinToString("\n"))
     }
 
-    private fun status(text: String) {
-        findViewById<TextView>(R.id.status).text = text
+    private fun isXiaomi() = Build.MANUFACTURER.lowercase().let { it.contains("xiaomi") || it.contains("redmi") || it.contains("poco") }
+
+    /** Asks Android to stop pausing Barid; without it some phones stop forwarding in the background. */
+    @SuppressLint("BatteryLife")
+    private fun requestBatteryExemption() {
+        val direct = Intent(AndroidSettings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, Uri.parse("package:$packageName"))
+        try {
+            startActivity(direct)
+        } catch (_: ActivityNotFoundException) {
+            runCatching { startActivity(Intent(AndroidSettings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) }
+        }
     }
 
-    private fun granted(permission: String) =
-        ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
+    /** Xiaomi's own Autostart list, which also stops background apps; falls back to the app's settings. */
+    private fun openAutostart() {
+        val miui = Intent().setComponent(ComponentName("com.miui.securitycenter", "com.miui.permcenter.autostart.AutoStartManagementActivity"))
+        try {
+            startActivity(miui)
+        } catch (_: Exception) {
+            openAppSettings()
+        }
+    }
 
-    private fun toast(id: Int) = toast(getString(id))
-    private fun toast(text: String) = android.widget.Toast.makeText(this, text, android.widget.Toast.LENGTH_LONG).show()
-
-    override fun onDestroy() {
-        io.shutdown()
-        super.onDestroy()
+    private fun openAppSettings() {
+        runCatching { startActivity(Intent(AndroidSettings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.fromParts("package", packageName, null))) }
     }
 }
