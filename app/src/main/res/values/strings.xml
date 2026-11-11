@@ -15,16 +15,52 @@
 
     <!-- Connect -->
     <string name="cd_back">Back</string>
-    <string name="connect_hint">In Darakav, open Bank SMS → Phones → Connect a phone, then point the camera at the code.</string>
+    <string name="connect_hint">Point the camera at the setup code. In Darakav it is under Bank SMS → Phones → Connect a phone.</string>
     <string name="paste_code_hint">Or paste a setup code</string>
     <string name="action_paste">Paste</string>
-    <string name="invalid_code">This isn\'t a setup code. Create a new one in Darakav and try again.</string>
+    <string name="invalid_code">This isn\'t a setup code. Create a new one on your server and try again.</string>
     <string name="other_server_title">Use another server</string>
-    <string name="other_server_body">Your own address, header and message format</string>
-    <string name="coming_soon">Soon</string>
+    <string name="other_server_body">Your own address, key and message format</string>
     <string name="camera_off_title">Camera is off</string>
     <string name="camera_off_body">Allow the camera to scan the code, or paste the setup code below.</string>
     <string name="action_allow_camera">Allow camera</string>
+
+    <!-- Another server -->
+    <string name="server_title">Another server</string>
+    <string name="server_intro">Send bank SMS to any address that accepts HTTP requests: your own app, a webhook or an automation tool.</string>
+    <string name="server_section_address">Address</string>
+    <string name="server_url">Address (URL)</string>
+    <string name="server_url_error">Enter a full http:// or https:// address.</string>
+    <string name="server_label">Name</string>
+    <string name="server_label_hint">Optional, only shown on this phone</string>
+    <string name="server_section_key">Key</string>
+    <string name="server_key">Key or token</string>
+    <string name="optional">Optional</string>
+    <string name="server_key_error">Enter the key the header should carry (no line breaks).</string>
+    <string name="server_header">Header name</string>
+    <string name="server_header_error">Use a plain header name such as X-Api-Key.</string>
+    <string name="server_header_help">Leave empty to send the key as Authorization: Bearer. With a header name, the key is sent as that header\'s value.</string>
+    <string name="server_section_format">Message format</string>
+    <string name="server_format">Format</string>
+    <string name="server_format_batch">Barid JSON</string>
+    <string name="server_format_template">Template</string>
+    <string name="server_format_batch_help">Up to five messages per POST request, as JSON:</string>
+    <string name="server_template">Body template</string>
+    <string name="server_template_error">The template needs {{text}} and must be shorter than 4,000 characters.</string>
+    <string name="server_template_help">One POST request per message. Placeholders are filled in; a template starting with { or [ is sent as JSON with the values escaped, anything else as plain text.</string>
+    <string name="server_spec">How servers receive messages</string>
+    <string name="server_spec_body">Requests, responses and setup codes</string>
+    <string name="server_send_test">Send a test</string>
+    <string name="server_test_message">Test message from Barid</string>
+    <string name="server_test_ok">The server accepted the request.</string>
+    <string name="server_test_rejected">The server refused the key (401 or 403).</string>
+    <string name="server_test_invalid">The server refused the message format (400, 413 or 422).</string>
+    <string name="server_test_failed">The server couldn\'t be reached (%1$s).</string>
+    <string name="action_show">Show</string>
+    <string name="action_hide">Hide</string>
+    <string name="no_key">no key</string>
+    <string name="confirm_server_title">Send bank SMS to this server?</string>
+    <string name="confirm_server_body">Barid will forward your bank transaction messages to this address. Continue only if you set it up yourself or trust who runs it.</string>
 
     <!-- Home -->
     <string name="cd_settings">Settings</string>

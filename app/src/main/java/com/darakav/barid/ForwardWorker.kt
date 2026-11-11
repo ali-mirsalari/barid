@@ -26,7 +26,7 @@ class ForwardWorker(context: Context, params: WorkerParameters) : CoroutineWorke
         if (settings.rejected) return@withContext Result.success()
         var rounds = 0
         while (rounds++ < 100) {
-            val batch = queue.peek(Forwarder.BATCH)
+            val batch = queue.peek(Forwarder.batchSize(pairing))
             if (batch.isEmpty()) break
             when (val result = Forwarder.send(pairing, batch)) {
                 Forwarder.Result.Ok -> delivered(settings, queue, batch)

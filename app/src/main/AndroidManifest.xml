@@ -41,6 +41,13 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="darakav" android:host="pair" />
             </intent-filter>
+            <!-- barid://pair?c=<setup code>, any server's pairing link (docs/SERVERS.md). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="barid" android:host="pair" />
+            </intent-filter>
         </activity>
 
 

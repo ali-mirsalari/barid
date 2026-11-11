@@ -45,6 +45,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -101,7 +102,7 @@ private fun Modifier.darkGlass(shape: RoundedCornerShape) = this.clip(shape)
  * and (later) other servers in a sheet within thumb reach.
  */
 @Composable
-fun ConnectScreen(canGoBack: Boolean, onBack: () -> Unit, onPaired: (Pairing) -> Unit) {
+fun ConnectScreen(canGoBack: Boolean, confirming: Boolean, onBack: () -> Unit, onOtherServer: () -> Unit, onPaired: (Pairing) -> Unit) {
     val context = LocalContext.current
     var cameraAllowed by remember { mutableStateOf(Snapshot.granted(context, Manifest.permission.CAMERA)) }
     var askedOnce by rememberSaveable { mutableStateOf(false) }
@@ -117,6 +118,8 @@ fun ConnectScreen(canGoBack: Boolean, onBack: () -> Unit, onPaired: (Pairing) ->
     var invalid by remember { mutableStateOf(false) }
     var done by remember { mutableStateOf(false) }
     val paired by rememberUpdatedState(onPaired)
+    // A code that needs confirmation keeps scanning paused until the dialog closes; cancelling resumes it.
+    LaunchedEffect(confirming) { if (!confirming) done = false }
     fun tryPair(text: String, fromScan: Boolean): Boolean {
         if (done) return true
         val pairing = Pairing.parse(text)
@@ -201,25 +204,25 @@ fun ConnectScreen(canGoBack: Boolean, onBack: () -> Unit, onPaired: (Pairing) ->
             if (code.isNotEmpty() && !invalid) {
                 PrimaryButton(stringResource(R.string.action_connect), { tryPair(code, false) }, Modifier.fillMaxWidth())
             }
-            SheetOption(BaridIcons.Server, stringResource(R.string.other_server_title), stringResource(R.string.other_server_body), stringResource(R.string.coming_soon))
+            SheetOption(BaridIcons.Server, stringResource(R.string.other_server_title), stringResource(R.string.other_server_body), onOtherServer)
         }
     }
 }
 
 @Composable
-private fun SheetOption(icon: ImageVector, title: String, body: String, badge: String) {
-    Row(Modifier.fillMaxWidth().padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+private fun SheetOption(icon: ImageVector, title: String, body: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(role = Role.Button, onClick = onClick).padding(vertical = 6.dp, horizontal = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(Color.White.copy(alpha = .08f)), contentAlignment = Alignment.Center) {
             Icon(icon, null, Modifier.size(17.dp), tint = SheetText)
         }
         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
-            Text(title, style = MaterialTheme.typography.bodyMedium, color = SheetText.copy(alpha = .7f))
+            Text(title, style = MaterialTheme.typography.bodyMedium, color = SheetText)
             Text(body, style = MaterialTheme.typography.bodySmall, color = SheetMuted)
         }
-        Text(
-            badge, style = MaterialTheme.typography.labelSmall, color = SheetMuted,
-            modifier = Modifier.clip(RoundedCornerShape(99.dp)).background(Color.White.copy(alpha = .08f)).padding(horizontal = 8.dp, vertical = 2.dp),
-        )
+        Icon(BaridIcons.Forward, null, Modifier.size(16.dp), tint = SheetMuted)
     }
 }
 
@@ -288,10 +291,7 @@ private fun QrCamera(modifier: Modifier, onCode: (String) -> Boolean) {
             provider = p
             val preview = Preview.Builder().build().also { it.setSurfaceProvider(view.surfaceProvider) }
             val analysis = ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build()
-            var stopped = false
-            analysis.setAnalyzer(executor, QrAnalyzer { text ->
-                view.post { if (!stopped && latest(text)) stopped = true }
-            })
+            analysis.setAnalyzer(executor, QrAnalyzer { text -> view.post { latest(text) } })
             runCatching {
                 p.unbindAll()
                 p.bindToLifecycle(owner, CameraSelector.DEFAULT_BACK_CAMERA, preview, analysis)

@@ -68,7 +68,7 @@ fun ScreenTitle(title: String, onBack: () -> Unit) {
 }
 
 @Composable
-private fun SectionLabel(text: String) {
+internal fun SectionLabel(text: String) {
     Text(
         text, style = MaterialTheme.typography.labelSmall, color = Barid.colors.muted,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 2.dp),
@@ -103,6 +103,7 @@ fun SettingsScreen(
     onLanguage: (String) -> Unit,
     onAbout: () -> Unit,
     onConnectOther: () -> Unit,
+    onEditServer: () -> Unit,
     onDisconnect: () -> Unit,
 ) {
     val c = Barid.colors
@@ -147,7 +148,12 @@ fun SettingsScreen(
                 if (pairing != null) {
                     ListRow(
                         if (state.isDarakav) stringResource(R.string.darakav) else state.host,
-                        subtitle = listOf(pairing.label, stringResource(R.string.key_hint, Format.ltr("••••" + pairing.key.takeLast(4)))).filter { it.isNotBlank() }.joinToString(" · "),
+                        subtitle = listOf(
+                            pairing.label,
+                            if (pairing.key.isEmpty()) stringResource(R.string.no_key) else stringResource(R.string.key_hint, Format.ltr("••••" + pairing.key.takeLast(4))),
+                        ).filter { it.isNotBlank() }.joinToString(" · "),
+                        onClick = if (pairing.darakav) null else onEditServer,
+                        trailing = if (pairing.darakav) null else { { Icon(BaridIcons.Forward, null, Modifier.size(16.dp), tint = c.muted) } },
                         leading = {
                             if (state.isDarakav) BrandTile(DarakavMark, 32.dp, corner = 9.dp, markScale = .9f)
                             else IconTile(BaridIcons.Server, c.accent, c.accentSoft, Modifier.size(32.dp))

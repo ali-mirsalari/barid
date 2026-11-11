@@ -3,13 +3,14 @@
 **Forward Iranian bank SMS to your finance app, privately.**
 برید پیامک‌های تراکنش بانکی را امن به برنامهٔ مالی‌تان می‌رساند.
 
-Barid is a small Android app that watches incoming SMS, keeps only bank transaction messages and sends them to a server you pair with. One-time passwords and personal messages never leave the phone. It is made by [Darakav](https://darakav.com), which is built in as a one-scan option.
+Barid is a small Android app that watches incoming SMS, keeps only bank transaction messages and sends them to a server you choose: [Darakav](https://darakav.com) (which makes Barid and is built in as a one-scan option), your own app, a webhook or an automation tool. One-time passwords and personal messages never leave the phone.
 
-> Status: early. Support for servers other than Darakav is next.
+> Status: early.
 
 ## What it does
 
-- **Pairs with one scan:** a QR code, a `darakav://pair?c=…` link or a pasted setup code (`darakav-sms:1:…`).
+- **Pairs with one scan:** a QR code, a pairing link (`barid://pair?c=…`, `darakav://pair?c=…`) or a pasted setup code (`barid:1:…`, `darakav-sms:1:…`). Barid asks before connecting to any server other than Darakav's.
+- **Works with any server:** an HTTP(S) address, an optional key in `Authorization: Bearer` or a header you name, and either Barid's JSON batch or your own body template. Server authors: see [docs/SERVERS.md](docs/SERVERS.md).
 - **Filters on the phone:** only messages with bank words and an amount are forwarded. Never one-time passwords, never messages from personal mobile numbers (`SmsFilter`).
 - **Works while closed:** a manifest `SMS_RECEIVED` receiver; multipart messages are joined.
 - **Never loses a message:** a file queue in app storage (up to 2,000) and a WorkManager job that sends batches when online, with exponential backoff. It stops when the server rejects the key. Servers are expected to ignore repeats, so retries are safe.
@@ -26,7 +27,7 @@ Requirements: Android 8.0+ (API 26).
 
 ## Privacy
 
-Barid has no analytics, no ads and no server of its own. Messages go only to the address in the pairing you scanned, over HTTPS (plain HTTP is allowed only so you can test a server on your local network).
+Barid has no analytics, no ads and no server of its own. Messages go only to the server you connected, over HTTPS (plain HTTP is allowed only so you can test a server on your local network).
 
 ## Build
 

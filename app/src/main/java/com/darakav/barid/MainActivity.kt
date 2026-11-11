@@ -61,7 +61,10 @@ import com.darakav.barid.ui.components.glass
 import com.darakav.barid.ui.screens.AboutScreen
 import com.darakav.barid.ui.screens.ActivityScreen
 import com.darakav.barid.ui.screens.ConnectScreen
+import com.darakav.barid.ui.screens.ConfirmServer
 import com.darakav.barid.ui.screens.HomeScreen
+import com.darakav.barid.ui.screens.ServerScreen
+import com.darakav.barid.ui.screens.sampleMessage
 import com.darakav.barid.ui.screens.SettingsScreen
 import com.darakav.barid.ui.screens.WelcomeScreen
 import com.darakav.barid.ui.theme.Barid
@@ -73,7 +76,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class Screen { WELCOME, CONNECT, HOME, SETTINGS, ABOUT, ACTIVITY }
+private enum class Screen { WELCOME, CONNECT, SERVER, HOME, SETTINGS, ABOUT, ACTIVITY }
 
 /** One activity, Compose screens. Messages are forwarded by [SmsReceiver] and [ForwardWorker], not here. */
 class MainActivity : AppCompatActivity() {
@@ -105,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun handle(intent: Intent?) {
         val data = intent?.data ?: return
-        if (data.scheme != "darakav") return
+        if (data.scheme != "darakav" && data.scheme != "barid") return
         val pairing = Pairing.parse(data.toString())
         if (pairing == null) deepLinkInvalid = true else deepLink = pairing
     }
@@ -139,7 +142,8 @@ class MainActivity : AppCompatActivity() {
             val pairing = settings.pairing ?: return
             testing = true
             scope.launch {
-                val result = withContext(Dispatchers.IO) { Forwarder.check(pairing) }
+                val sample = sampleMessage(getString(R.string.server_test_message))
+                val result = withContext(Dispatchers.IO) { Forwarder.check(pairing, sample) }
                 if (result == Forwarder.Result.Rejected) settings.rejected = true
                 message = getString(
                     when (result) {
@@ -170,7 +174,13 @@ class MainActivity : AppCompatActivity() {
             if (granted) runImport() else message = getString(R.string.import_needs_permission)
         }
 
-        fun paired(pairing: Pairing) {
+        // A code for any server other than Darakav's is confirmed first: a QR code alone must never
+        // redirect bank messages somewhere the owner did not choose.
+        var pending by remember { mutableStateOf<Pairing?>(null) }
+
+        fun paired(pairing: Pairing, confirmed: Boolean = false) {
+            if (!confirmed && !pairing.trusted) { pending = pairing; return }
+            pending = null
             settings.pairing = pairing
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             ForwardWorker.schedule(applicationContext)
@@ -206,7 +216,11 @@ class MainActivity : AppCompatActivity() {
                     ) { target ->
                         when (target) {
                             Screen.WELCOME -> WelcomeScreen(onConnect = { push(Screen.CONNECT) })
-                            Screen.CONNECT -> ConnectScreen(canGoBack = stack.size > 1, onBack = { pop() }, onPaired = { paired(it) })
+                            Screen.CONNECT -> ConnectScreen(
+                                canGoBack = stack.size > 1, confirming = pending != null,
+                                onBack = { pop() }, onOtherServer = { push(Screen.SERVER) }, onPaired = { paired(it) },
+                            )
+                            Screen.SERVER -> ServerScreen(snapshot.pairing, onBack = { pop() }, onConnect = { paired(it, confirmed = true) })
                             Screen.HOME -> HomeScreen(
                                 state = snapshot, now = now, xiaomi = isXiaomi(), importing = importing, testing = testing,
                                 onSettings = { push(Screen.SETTINGS) },
@@ -234,6 +248,7 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 onAbout = { push(Screen.ABOUT) },
                                 onConnectOther = { push(Screen.CONNECT) },
+                                onEditServer = { push(Screen.SERVER) },
                                 onDisconnect = {
                                     settings.pairing = null
                                     MessageQueue(applicationContext).clear()
@@ -248,6 +263,7 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                     Toast(message, Modifier.align(Alignment.BottomCenter)) { message = null }
+                    pending?.let { ConfirmServer(it, onConfirm = { paired(it, confirmed = true) }, onCancel = { pending = null }) }
                 }
             }
         }

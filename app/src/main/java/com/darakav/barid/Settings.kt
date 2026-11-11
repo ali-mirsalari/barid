@@ -11,13 +11,22 @@ class Settings(context: Context) {
         get() {
             val url = prefs.getString("url", null) ?: return null
             val key = prefs.getString("key", null) ?: return null
-            return Pairing(url, key, prefs.getString("label", "") ?: "")
+            val kind = prefs.getString("kind", null)
+            return Pairing(
+                url, key, prefs.getString("label", "") ?: "",
+                header = prefs.getString("header", "") ?: "",
+                template = prefs.getString("template", "") ?: "",
+                // Pairings saved before custom servers existed were all Darakav's.
+                darakav = if (kind == null) key.startsWith("dkv_") else kind == "darakav",
+            )
         }
         set(value) = prefs.edit {
             if (value == null) {
-                remove("url"); remove("key"); remove("label")
+                remove("url"); remove("key"); remove("label"); remove("header"); remove("template"); remove("kind")
             } else {
                 putString("url", value.url); putString("key", value.key); putString("label", value.label)
+                putString("header", value.header); putString("template", value.template)
+                putString("kind", if (value.darakav) "darakav" else "custom")
             }
             remove("rejected"); remove("lastError")
         }

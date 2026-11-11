@@ -19,7 +19,6 @@ import com.darakav.barid.MessageQueue
 import com.darakav.barid.Pairing
 import com.darakav.barid.R
 import com.darakav.barid.Settings
-import java.net.URI
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
@@ -37,8 +36,8 @@ data class Snapshot(
     val smsGranted: Boolean,
     val batteryOk: Boolean,
 ) {
-    val host: String get() = pairing?.let { runCatching { URI(it.url).host }.getOrNull() } ?: ""
-    val isDarakav: Boolean get() = host == "darakav.com" || host.endsWith(".darakav.com")
+    val host: String get() = pairing?.host.orEmpty()
+    val isDarakav: Boolean get() = pairing?.trusted == true
 
     companion object {
         val Empty = Snapshot(null, false, 0, 0, null, emptyList(), 0, false, true)
