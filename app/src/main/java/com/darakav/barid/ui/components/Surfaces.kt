@@ -87,11 +87,22 @@ fun Backdrop(hazeState: HazeState?, modifier: Modifier = Modifier) {
     }
 }
 
-/** Frosted glass: blurred backdrop (Android 12+), translucent tint, bright top edge and hairline border. */
-fun Modifier.glass(colors: BaridColors, hazeState: HazeState?, shape: Shape = RoundedCornerShape(18.dp), strong: Boolean = false): Modifier {
+/**
+ * Frosted glass: blurred backdrop (Android 12+), translucent tint, bright top edge and hairline border.
+ * [blur] false keeps the look without the live blur, for long scrolling lists: the backdrop is soft
+ * glows that look the same blurred or not, and re-blurring every card on every frame stutters on
+ * slower phones.
+ */
+fun Modifier.glass(
+    colors: BaridColors,
+    hazeState: HazeState?,
+    shape: Shape = RoundedCornerShape(18.dp),
+    strong: Boolean = false,
+    blur: Boolean = true,
+): Modifier {
     val tint = if (strong) colors.surfaceStrong else colors.surface
     val edge = Brush.verticalGradient(0f to colors.glassEdge, .25f to colors.line, 1f to colors.line)
-    val fill = if (colors.solid || hazeState == null) {
+    val fill = if (colors.solid || hazeState == null || !blur) {
         Modifier.background(if (colors.solid) colors.surfaceSolid else tint, shape)
     } else {
         Modifier.hazeEffect(
@@ -110,8 +121,14 @@ fun Modifier.glass(colors: BaridColors, hazeState: HazeState?, shape: Shape = Ro
 }
 
 @Composable
-fun GlassCard(modifier: Modifier = Modifier, shape: Shape = RoundedCornerShape(18.dp), strong: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
-    Column(modifier.glass(Barid.colors, LocalHazeState.current, shape, strong), content = content)
+fun GlassCard(
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(18.dp),
+    strong: Boolean = false,
+    blur: Boolean = true,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier.glass(Barid.colors, LocalHazeState.current, shape, strong, blur), content = content)
 }
 
 @Composable

@@ -39,7 +39,15 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.unit.dp
+import com.darakav.barid.ui.theme.BaridColors
 import com.darakav.barid.BuildConfig
 import com.darakav.barid.LogEntry
 import com.darakav.barid.R
@@ -224,19 +232,52 @@ private fun Swatch(palette: Palette, selected: Boolean, name: String, onClick: (
 @Composable
 fun ActivityScreen(entries: List<LogEntry>, onBack: () -> Unit) {
     val locale = Format.locale()
-    val groups = entries.groupBy { Format.dayIndex(it.receivedAt) }.values.toList()
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    // Flat rows so each message is its own lazy item: an imported day can hold dozens.
+    val rows = remember(entries) {
+        entries.groupBy { Format.dayIndex(it.receivedAt) }.values.flatMap { day ->
+            listOf<Any>(day.first().receivedAt) + day.mapIndexed { i, e -> Segment(e, first = i == 0, last = i == day.lastIndex) }
+        }
+    }
+    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
         item { ScreenTitle(stringResource(R.string.activity_title), onBack) }
-        items(groups) { day ->
-            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(
-                    Format.day(day.first().receivedAt, locale), style = MaterialTheme.typography.labelMedium, color = Barid.colors.muted,
-                    modifier = Modifier.padding(start = 4.dp, top = 6.dp),
-                )
-                GlassCard(Modifier.fillMaxWidth()) {
-                    day.forEachIndexed { i, entry -> if (i > 0) Divider(); EntryRow(entry) }
+        items(rows, key = { if (it is Segment) it.entry.id else "day-$it" }, contentType = { if (it is Segment) "entry" else "day" }) { row ->
+            if (row is Segment) {
+                Box(Modifier.fillMaxWidth().cardSegment(Barid.colors, row.first, row.last)) {
+                    Column {
+                        if (!row.first) Divider()
+                        EntryRow(row.entry)
+                    }
                 }
+            } else {
+                Text(
+                    Format.day(row as Long, locale), style = MaterialTheme.typography.labelMedium, color = Barid.colors.muted,
+                    modifier = Modifier.padding(start = 4.dp, top = 16.dp, bottom = 6.dp),
+                )
             }
+        }
+    }
+}
+
+private class Segment(val entry: LogEntry, val first: Boolean, val last: Boolean)
+
+/**
+ * One row of a card split into lazy rows: the card's rounded outline, tint and bright top edge, cut to
+ * this row (a taller rounded rectangle, clipped), so the rows read as one glass card. No live blur.
+ */
+private fun Modifier.cardSegment(c: BaridColors, first: Boolean, last: Boolean): Modifier = this.drawWithCache {
+    val radius = 18.dp.toPx()
+    val over = radius * 2
+    val top = if (first) 0f else -over
+    val bottom = if (last) size.height else size.height + over
+    val stroke = 1.dp.toPx()
+    val outline = RoundRect(stroke / 2, top + stroke / 2, size.width - stroke / 2, bottom - stroke / 2, CornerRadius(radius))
+    val path = Path().apply { addRoundRect(outline) }
+    val fill = if (c.solid) c.surfaceSolid else c.surface
+    val edge = if (first) Brush.verticalGradient(0f to c.glassEdge, .5f to c.line, startY = 0f, endY = radius * 2) else SolidColor(c.line)
+    onDrawBehind {
+        clipRect {
+            drawPath(path, fill)
+            drawPath(path, edge, style = Stroke(stroke))
         }
     }
 }
