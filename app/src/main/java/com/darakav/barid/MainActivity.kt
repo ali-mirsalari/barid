@@ -25,7 +25,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -88,6 +92,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val crash = CrashReport.read(this)
+        if (crash != null) {
+            setContent { CrashScreen(crash) }
+            return
+        }
         snapshot = Snapshot.load(this)
         if (savedInstanceState == null) handle(intent)
         lifecycleScope.launch {
@@ -300,6 +309,43 @@ class MainActivity : AppCompatActivity() {
                     }
                     Toast(message, Modifier.align(Alignment.BottomCenter)) { message = null }
                     pending?.let { ConfirmServer(it, onConfirm = { paired(it, confirmed = true) }, onCancel = { pending = null }) }
+                }
+            }
+        }
+    }
+
+    /** Shown once after a crash: the error to copy and send to the developer, then the app as usual. */
+    @Composable
+    private fun CrashScreen(report: String) {
+        BaridTheme(settings.themeMode, Palette.of(settings.palette), true) {
+            val c = Barid.colors
+            androidx.compose.foundation.layout.Column(
+                Modifier.fillMaxSize().background(c.canvas).statusBarsPadding().navigationBarsPadding().padding(16.dp),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp),
+            ) {
+                Text(getString(R.string.crash_title), style = MaterialTheme.typography.titleLarge, color = c.text)
+                Text(getString(R.string.crash_body), style = MaterialTheme.typography.bodySmall, color = c.muted)
+                androidx.compose.foundation.text.selection.SelectionContainer(
+                    Modifier.weight(1f).fillMaxWidth().background(c.line, RoundedCornerShape(12.dp))
+                        .verticalScroll(rememberScrollState()).padding(12.dp),
+                ) {
+                    Text(
+                        report, color = c.text,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                            textDirection = androidx.compose.ui.text.style.TextDirection.Ltr,
+                        ),
+                    )
+                }
+                androidx.compose.foundation.layout.Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(10.dp)) {
+                    com.darakav.barid.ui.components.SecondaryButton(getString(R.string.crash_copy), {
+                        getSystemService(android.content.ClipboardManager::class.java)
+                            ?.setPrimaryClip(android.content.ClipData.newPlainText("Barid crash", report))
+                    }, Modifier.weight(1f))
+                    com.darakav.barid.ui.components.PrimaryButton(getString(R.string.crash_continue), {
+                        CrashReport.clear(this@MainActivity)
+                        recreate()
+                    }, Modifier.weight(1f))
                 }
             }
         }

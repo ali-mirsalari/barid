@@ -172,4 +172,8 @@
     <string name="nothing_waiting">پیامی در صف نیست.</string>
     <string name="send_failed">هنوز ارسال نشد. برید دوباره تلاش می‌کند.</string>
     <string name="card_waiting_pending">هنوز فرستاده نشده. ممکن است گوشی برید را در پس‌زمینه متوقف کرده باشد؛ تا وقتی برنامه باز است ارسال می‌شود.</string>
+    <string name="crash_title">برید ناگهان بسته شد</string>
+    <string name="crash_body">این گزارش را کپی کنید و برای سازنده بفرستید. محل خطا را نشان می‌دهد و فقط روی همین گوشی نگه داشته می‌شود.</string>
+    <string name="crash_copy">کپی گزارش</string>
+    <string name="crash_continue">ادامه</string>
 </resources>

@@ -180,4 +180,8 @@
     <string name="nothing_waiting">Nothing is waiting.</string>
     <string name="send_failed">Couldn\'t send yet. Barid will keep trying.</string>
     <string name="card_waiting_pending">Not sent yet. Your phone may be holding Barid back in the background; it sends while the app is open.</string>
+    <string name="crash_title">Barid stopped unexpectedly</string>
+    <string name="crash_body">Copy this report and send it to the developer. It describes where the error happened; it is kept only on this phone.</string>
+    <string name="crash_copy">Copy report</string>
+    <string name="crash_continue">Continue</string>
 </resources>
