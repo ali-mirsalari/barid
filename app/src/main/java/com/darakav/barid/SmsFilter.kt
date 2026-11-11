@@ -17,6 +17,10 @@ object SmsFilter {
     // the same rule): invoices, shops and payment apps send amounts with "خرید" or "پرداخت" too.
     private val accountWords = Regex("مانده|موجودی|برداشت|واریز")
     private val currency = Regex("ریال|تومان|\\d\\s*R\\b")
+    // Not a transaction: a request waiting for the owner's reply (a loan application to confirm), or a
+    // notice of money on its way ("… جهت واریز به حساب شما … ارسال گردید", a dividend notice); the
+    // bank's own SMS reports the actual deposit.
+    private val request = Regex("در\\s*صورت\\s*(?:عدم\\s*)?تا[یئ]ید|درخواست\\s*تسهیلات|جهت\\s*واریز|سهامدار\\s*محترم")
     private val amount = Regex("\\d{1,3}(?:[,٬]\\d{3})+|[+-]\\s*\\d{4,}|\\d{4,}\\s*[+-]")
 
     fun normalize(text: String): String = buildString(text.length) {
@@ -52,7 +56,7 @@ object SmsFilter {
         // Personal numbers (09…/+989…) do not send bank messages.
         val s = sender?.replace(" ", "") ?: ""
         if (Regex("^(\\+98|0098|0)?9\\d{9}$").matches(s)) return false
-        if (!amount.containsMatchIn(t)) return false
+        if (!amount.containsMatchIn(t) || request.containsMatchIn(t)) return false
         if (Banks.detect(sender, t) == null) return accountWords.containsMatchIn(t)
         return transaction.containsMatchIn(t) || currency.containsMatchIn(t)
     }

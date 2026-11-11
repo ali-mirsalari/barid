@@ -42,8 +42,17 @@ class SmsFilterTest {
     }
 
     @Test
+    fun requestsAwaitingAReplyStayOnThePhone() {
+        // Synthetic loan application from a recognized bank, asking for a reply.
+        // Synthetic dividend notice that names a bank: the bank's own SMS reports the deposit.
+        assertFalse(SmsFilter.shouldForward("Registry", "سهامدار محترم؛ نام نمونه، مبلغ 150,000 ریال بابت سود نماد نمونه جهت واریز به حساب شما نزد بانک سامان ارسال گردید."))
+        assertFalse(SmsFilter.shouldForward("RefahBank", "مشتری گرامی\nبانک رفاه درحال ثبت درخواست تسهیلات به مبلغ 500,000,000 ریال است. لطفا درصورت تایید عدد 1 را ارسال نمایید."))
+    }
+
+    @Test
     fun bankMessagesWithoutTheUsualWordsStillPass() {
         assertTrue(SmsFilter.shouldForward("BankMellat", "بانک ملت\nحساب 1234\n+2,500,000 ریال\n03/14-10:05"))
+        assertTrue(SmsFilter.shouldForward("RefahBank", "بانك رفاه\nحساب 112233445\nواریز12,000,000+\nانتقال از حساب 556677889 نام نمونه \nمانده18,250,000\n5/08/14-14:45"))
         assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nصورتحساب کارت\nخرید: 750,000 ریال\nمانده: 4,000,000"))
     }
 

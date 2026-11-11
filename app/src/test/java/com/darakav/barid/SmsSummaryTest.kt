@@ -64,4 +64,12 @@ class SmsSummaryTest {
         assertEquals(SmsSummary.Direction.OUT, s.direction)
         assertEquals(85_000L, s.amount)
     }
+
+    @Test
+    fun depositFromAnotherAccountWithGluedNumbers() {
+        val s = SmsSummary.read("RefahBank", "بانك رفاه\nحساب 112233445\nواریز12,000,000+\nانتقال از حساب 556677889 نام نمونه \nمانده18,250,000\n5/08/14-14:45")
+        assertEquals("refah", s.bank)
+        assertEquals(SmsSummary.Direction.IN, s.direction)
+        assertEquals(12_000_000L, s.amount)
+    }
 }

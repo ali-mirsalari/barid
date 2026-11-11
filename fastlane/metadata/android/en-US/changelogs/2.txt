@@ -1,1 +1,1 @@
-Fewer wrong messages are forwarded: transfer confirmation codes ("رمز" with a number, or with Android's code-autofill signature) stay on the phone, and messages from senders that are not banks (invoices, shops, payment-app receipts) are forwarded only with a balance, deposit or withdrawal.
+Fewer wrong messages are forwarded: transfer confirmation codes, loan requests awaiting a reply and dividend or payment notices stay on the phone, and messages from senders that are not banks (invoices, shops, payment-app receipts) are forwarded only with a balance, deposit or withdrawal.
