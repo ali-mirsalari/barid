@@ -11,7 +11,7 @@ Barid is a small Android app that watches incoming SMS, keeps only bank transact
 
 - **Pairs with one scan:** a QR code, a pairing link (`barid://pair?c=…`, `darakav://pair?c=…`) or a pasted setup code (`barid:1:…`, `darakav-sms:1:…`). Barid asks before connecting to any server other than Darakav's.
 - **Works with any server:** an HTTP(S) address, an optional key in `Authorization: Bearer` or a header you name, and either Barid's JSON batch or your own body template. Server authors: see [docs/SERVERS.md](docs/SERVERS.md).
-- **Filters on the phone:** only messages with bank words and an amount are forwarded. Never one-time passwords, never messages from personal mobile numbers (`SmsFilter`).
+- **Filters on the phone:** a message needs an amount and, from a recognized bank, a transaction word or currency; from any other sender, a balance, deposit or withdrawal word (so invoices, shops and payment-app receipts stay on the phone). Never one-time codes (including transfer codes and messages with Android's code-autofill signature), never messages from personal mobile numbers (`SmsFilter`).
 - **Works while closed:** a manifest `SMS_RECEIVED` receiver; multipart messages are joined.
 - **Never loses a message:** a file queue in app storage (up to 2,000) and a WorkManager job that sends batches when online, with exponential backoff. It stops when the server rejects the key. Servers are expected to ignore repeats, so retries are safe.
 - **Imports history:** optional (needs `READ_SMS`), bank messages from the last 60 days.

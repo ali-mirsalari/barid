@@ -32,14 +32,18 @@ Builds:
   - versionName: 1.0.0
     versionCode: 1
     commit: v1.0.0
+
+  - versionName: 1.0.1
+    versionCode: 2
+    commit: v1.0.1
     subdir: app
     gradle:
       - yes
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.0
-CurrentVersionCode: 1
+CurrentVersion: 1.0.1
+CurrentVersionCode: 2
 ```
 
 ## Later releases
