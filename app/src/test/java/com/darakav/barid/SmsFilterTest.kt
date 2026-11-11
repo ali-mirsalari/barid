@@ -32,6 +32,22 @@ class SmsFilterTest {
     }
 
     @Test
+    fun invoicesAndShopMessagesStayOnThePhone() {
+        // Synthetic: a hosting invoice with an amount in toman and a payment link.
+        assertFalse(SmsFilter.shouldForward("HostCo", "هاست نمونه\nمشترک گرامی، یک فاکتور پرداخت‌نشده در حساب شما ثبت شده است.\nمبلغ فاکتور: 1,250,000 تومان\nمهلت پرداخت: 1405/09/01\nپرداخت آنلاین: https://example.com/pay"))
+        assertFalse(SmsFilter.shouldForward("ShopCo", "تخفیف ویژه! همه کالاها با 500,000 تومان تخفیف"))
+        assertFalse(SmsFilter.shouldForward("Telecom", "صورتحساب این ماه شما 320,000 ریال است"))
+        // Synthetic payment-app receipt: the bank's own SMS reports the same purchase.
+        assertFalse(SmsFilter.shouldForward("PayApp", "خرید کتاب نمونه از (فروشگاه) به مبلغ ۸۵,۰۰۰ تومان.\nکیف پول نمونه\nشناسه: 123456r"))
+    }
+
+    @Test
+    fun bankMessagesWithoutTheUsualWordsStillPass() {
+        assertTrue(SmsFilter.shouldForward("BankMellat", "بانک ملت\nحساب 1234\n+2,500,000 ریال\n03/14-10:05"))
+        assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nصورتحساب کارت\nخرید: 750,000 ریال\nمانده: 4,000,000"))
+    }
+
+    @Test
     fun ordinaryTransactionsAreNotMistakenForCodes() {
         assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nخرید رمزارز\nبرداشت: 2,000,000 ریال\nمانده: 9,000,000"))
         assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nبرداشت: 2,000,000 ریال\nحساب\n01000000001"))

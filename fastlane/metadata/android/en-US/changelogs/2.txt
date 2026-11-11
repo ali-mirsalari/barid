@@ -1,1 +1,1 @@
-Transfer confirmation codes are no longer forwarded: "رمز" followed by a number without a colon, and messages carrying Android's code-autofill signature, now stay on the phone.
+Fewer wrong messages are forwarded: transfer confirmation codes ("رمز" with a number, or with Android's code-autofill signature) stay on the phone, and messages from senders that are not banks (invoices, shops, payment-app receipts) are forwarded only with a balance, deposit or withdrawal.

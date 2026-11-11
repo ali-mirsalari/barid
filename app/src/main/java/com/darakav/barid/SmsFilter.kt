@@ -10,7 +10,13 @@ object SmsFilter {
             "|(?:^|[^\\p{L}])(?:otp|one[- ]time|verification code|passcode)(?:[^\\p{L}]|$)|رمز\\s*:?\\s*\\d{4,}",
         RegexOption.IGNORE_CASE,
     )
-    private val money = Regex("مانده|موجودی|برداشت|واریز|خرید|انتقال|پایا|ساتنا|قسط|کارمزد|بانک|ریال|تومان")
+    // Words of an actual account movement or balance. Currency words alone ("ریال", "تومان") are not
+    // enough: invoices, shops and bill reminders use them too.
+    private val transaction = Regex("مانده|موجودی|برداشت|واریز|خرید|انتقال|پایا|ساتنا|قسط|کارمزد|بستانکار|بدهکار|برگشت")
+    // From a sender that is not a recognized bank, only these mark a bank message (Darakav's server uses
+    // the same rule): invoices, shops and payment apps send amounts with "خرید" or "پرداخت" too.
+    private val accountWords = Regex("مانده|موجودی|برداشت|واریز")
+    private val currency = Regex("ریال|تومان|\\d\\s*R\\b")
     private val amount = Regex("\\d{1,3}(?:[,٬]\\d{3})+|[+-]\\s*\\d{4,}|\\d{4,}\\s*[+-]")
 
     fun normalize(text: String): String = buildString(text.length) {
@@ -35,7 +41,10 @@ object SmsFilter {
 
     fun isSecret(text: String): Boolean = secret.containsMatchIn(normalize(text)) || forAutofill(text)
 
-    /** True for messages worth forwarding: bank words together with an amount-like number. */
+    /**
+     * True for messages worth forwarding: an amount-like number, and from a recognized bank a word of
+     * an account movement or a currency; from any other sender a balance, deposit or withdrawal word.
+     */
     fun shouldForward(sender: String?, text: String): Boolean {
         if (text.isBlank() || text.length > 1600) return false
         val t = normalize(text)
@@ -43,6 +52,8 @@ object SmsFilter {
         // Personal numbers (09…/+989…) do not send bank messages.
         val s = sender?.replace(" ", "") ?: ""
         if (Regex("^(\\+98|0098|0)?9\\d{9}$").matches(s)) return false
-        return money.containsMatchIn(t) && amount.containsMatchIn(t)
+        if (!amount.containsMatchIn(t)) return false
+        if (Banks.detect(sender, t) == null) return accountWords.containsMatchIn(t)
+        return transaction.containsMatchIn(t) || currency.containsMatchIn(t)
     }
 }
