@@ -1,0 +1,26 @@
+Barid watches incoming SMS, keeps only bank transaction messages and sends them to the server you connect: <a href="https://darakav.com">Darakav</a> (built in, one scan), your own app, a webhook or an automation tool. Your finance app gets every deposit and withdrawal without you typing a thing.
+
+<b>Private by design</b>
+<ul>
+<li>Only bank transaction messages leave the phone. One-time passwords, verification codes and messages from personal numbers never do.</li>
+<li>Message text is kept only until it is delivered. The Recent list stores bank, amount and time, never the text.</li>
+<li>No ads, no analytics, no Barid server. The connection key is excluded from backups.</li>
+<li>Barid asks before connecting to any server other than Darakav's.</li>
+</ul>
+
+<b>Reliable</b>
+<ul>
+<li>Works while the app is closed; long messages are joined.</li>
+<li>Offline? Messages wait on the phone and send later, with automatic retries.</li>
+<li>Each SMS is forwarded once, even if your carrier delivers it twice or you import again.</li>
+<li>Import bank messages from the last 60 days.</li>
+<li>Shortcuts to the battery and Autostart settings that stop forwarding on many phones.</li>
+</ul>
+
+<b>Any server</b>
+Connect by scanning a setup code, opening a pairing link or entering an address, an optional key (Bearer or a header you name) and the message format: Barid's JSON batch or your own body template. The protocol is public: https://github.com/ali-mirsalari/barid/blob/main/docs/SERVERS.md
+
+<b>Designed for Iran</b>
+English and Persian with full right-to-left layout, Persian digits and the Jalali calendar. Recognizes Iranian banks. Frosted-glass design with Material You colors or Darakav's presets, light and dark.
+
+Barid is free software under the GNU GPL v3.0, made by Darakav.

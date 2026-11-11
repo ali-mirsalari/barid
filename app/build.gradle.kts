@@ -64,6 +64,11 @@ android {
         buildConfig = true
         compose = true
     }
+    // F-Droid rejects the encrypted dependency report AGP adds to APKs and bundles.
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
+    }
     testOptions {
         unitTests.isReturnDefaultValues = true
     }

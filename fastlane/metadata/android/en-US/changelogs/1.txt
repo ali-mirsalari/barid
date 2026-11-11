@@ -1,0 +1,1 @@
+First release: forwards Iranian bank transaction SMS to Darakav or any server, with on-phone filtering of one-time passwords, an offline queue, duplicate detection, a 60-day import, custom servers and templates, Material You and Darakav colors, and full Persian (RTL, Jalali).
