@@ -5,7 +5,7 @@
 
 Barid is a small Android app that watches incoming SMS, keeps only bank transaction messages and sends them to a server you choose: [Darakav](https://darakav.com) (which makes Barid and is built in as a one-scan option), your own app, a webhook or an automation tool. One-time passwords and personal messages never leave the phone.
 
-> Status: early.
+> Get it from [GitHub releases](https://github.com/ali-mirsalari/barid/releases) (F-Droid listing in progress).
 
 ## What it does
 
