@@ -1,0 +1,80 @@
+# Barid · برید
+
+**Forward Iranian bank SMS to your finance app, privately.**
+برید پیامک‌های تراکنش بانکی را امن به برنامهٔ مالی‌تان می‌رساند.
+
+Barid is a small Android app that watches incoming SMS, keeps only bank transaction messages and sends them to a server you pair with. One-time passwords and personal messages never leave the phone. It is made by [Darakav](https://darakav.com), which is built in as a one-scan option.
+
+> Status: early. The first public release, with a full redesign and support for any server, is in progress.
+
+## What it does
+
+- **Pairs with one scan:** a QR code, a `darakav://pair?c=…` link or a pasted setup code (`darakav-sms:1:…`).
+- **Filters on the phone:** only messages with bank words and an amount are forwarded. Never one-time passwords, never messages from personal mobile numbers (`SmsFilter`).
+- **Works while closed:** a manifest `SMS_RECEIVED` receiver; multipart messages are joined.
+- **Never loses a message:** a file queue in app storage (up to 2,000) and a WorkManager job that sends batches when online, with exponential backoff. It stops when the server rejects the key. Servers are expected to ignore repeats, so retries are safe.
+- **Imports history:** optional (needs `READ_SMS`), bank messages from the last 60 days.
+- **Keeps the key private:** app-private storage, excluded from backups and device transfer.
+
+Requirements: Android 8.0+ (API 26).
+
+## Privacy
+
+Barid has no analytics, no ads and no server of its own. Messages go only to the address in the pairing you scanned, over HTTPS (plain HTTP is allowed only so you can test a server on your local network).
+
+## Build
+
+Android Gradle Plugin 8.7.3, Gradle 8.13 (wrapper), Kotlin 2.1, JDK 17–21, compile/target SDK 35, build-tools 35.
+
+```sh
+./gradlew testDebugUnitTest assembleDebug lintDebug   # app/build/outputs/apk/debug/app-debug.apk
+```
+
+The SDK location comes from `ANDROID_HOME` or `local.properties` (`sdk.dir=…`, not committed).
+
+### From Iran
+
+Google's SDK and Maven downloads (`dl.google.com`, `maven.google.com`) are unavailable from Iran. Use a mirror of Google's Maven, for example in `~/.gradle/gradle.properties`:
+
+```properties
+googleMavenMirror=https://maven.myket.ir
+```
+
+To build without installing the SDK, use Docker. Docker Hub images reach Iran through a registry mirror such as ArvanCloud (`"registry-mirrors": ["https://docker.arvancloud.ir"]` in `/etc/docker/daemon.json`). CircleCI's `cimg/android` image ships the SDK and JDK 21. Its SDK is readable only by the image's own user, so build a writable copy:
+
+```sh
+docker pull cimg/android:2026.10.1
+cp -a . /tmp/barid && chmod -R a+rwX /tmp/barid && mkdir -p /tmp/barid-gradle && chmod a+rwX /tmp/barid-gradle
+docker run --rm --network host -e GRADLE_USER_HOME=/g -v /tmp/barid-gradle:/g -v /tmp/barid:/w -w /w \
+  cimg/android:2026.10.1 bash -c 'umask 000; ./gradlew --no-daemon -PgoogleMavenMirror=https://maven.myket.ir testDebugUnitTest assembleDebug lintDebug'
+# APK: /tmp/barid/app/build/outputs/apk/debug/app-debug.apk
+```
+
+`--network host` avoids connection timeouts seen on Docker's bridge network.
+
+The GitHub workflow (`.github/workflows/build.yml`) builds, tests and lints the debug APK on every push and keeps it as a run artifact.
+
+## Release
+
+Create a release key once and keep it outside the repository (losing it means users must reinstall):
+
+```sh
+keytool -genkeypair -v -keystore ~/.config/barid/barid-release.jks -alias barid -keyalg RSA -keysize 4096 -validity 10000
+```
+
+Then create `keystore.properties` (ignored by Git):
+
+```properties
+storeFile=/home/<you>/.config/barid/barid-release.jks
+storePassword=…
+keyAlias=barid
+keyPassword=…
+```
+
+Build with `./gradlew assembleRelease` (`app/build/outputs/apk/release/app-release.apk`). Increase `versionCode` for every release; Android installs an update only when it is signed with the same key.
+
+Google Play requires its SMS permission declaration. Bazaar, Myket and F-Droid accept the app as is.
+
+## License
+
+Barid is free software under the [GNU General Public License v3.0](LICENSE). The name "Barid", the Barid logo and the Darakav name and logo are not covered by the license; see [TRADEMARKS.md](TRADEMARKS.md).

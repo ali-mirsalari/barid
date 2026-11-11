@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Barid</string>
+    <string name="intro">Forwards your bank transaction SMS to Darakav, where you confirm them into your accounts. One-time passwords and personal messages never leave this phone.</string>
+    <string name="pair_steps">In Darakav, open Bank SMS → Phones → Connect a phone, choose this app and create a key. Then scan the QR code, or paste the setup code below.</string>
+    <string name="scan">Scan QR code</string>
+    <string name="scan_prompt">Scan the QR code shown in Darakav</string>
+    <string name="code_hint">Setup code (darakav-sms:1:…)</string>
+    <string name="connect">Connect</string>
+    <string name="invalid_code">This is not a Darakav setup code. Create a new phone key in Darakav and try again.</string>
+    <string name="replace_title">Replace the connection?</string>
+    <string name="replace_message">This phone is already connected. Use the new key instead? Messages not yet sent are discarded.</string>
+    <string name="replace_action">Replace</string>
+    <string name="device_line">%1$s · %2$s</string>
+    <string name="insecure">This connection is not encrypted (http). Use it only for testing on your own network.</string>
+    <string name="allow_sms">Allow receiving SMS</string>
+    <string name="battery">Allow running in the background</string>
+    <string name="test">Test connection</string>
+    <string name="testing">Checking the connection…</string>
+    <string name="test_ok">Connected to Darakav.</string>
+    <string name="test_rejected">Darakav does not accept this phone\'s key any more. Connect the phone again.</string>
+    <string name="test_failed">Darakav could not be reached. Messages wait on the phone and are sent when it is back.</string>
+    <string name="import_recent">Import bank SMS from the last 60 days</string>
+    <string name="import_needs_permission">Importing needs permission to read your SMS.</string>
+    <string name="import_done">%1$d bank messages queued. Darakav skips ones it already has.</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="disconnect_title">Disconnect this phone?</string>
+    <string name="disconnect_message">New bank SMS will no longer be sent to Darakav. Also remove the phone in Darakav → Bank SMS → Phones.</string>
+    <string name="state_active">Forwarding new bank SMS.</string>
+    <string name="state_no_permission">Not forwarding: allow receiving SMS.</string>
+    <string name="state_rejected">Stopped: the key was removed in Darakav. Connect the phone again.</string>
+    <string name="last_sent">Last sent %1$s · %2$d messages so far</string>
+    <string name="nothing_sent">Nothing sent yet.</string>
+    <string name="pending">%1$d waiting to be sent</string>
+    <string name="last_problem">Last problem: %1$s</string>
+    <string name="privacy">Only messages that look like bank transactions are sent, over the connection shown above. The key is stored only in this app and is not included in backups.</string>
+</resources>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">برید</string>
+    <string name="intro">پیامک‌های تراکنش بانکی شما را به داراکاو می‌فرستد تا آن‌ها را در حساب‌هایتان تأیید و ثبت کنید. رمزهای یکبارمصرف و پیامک‌های شخصی هرگز از این گوشی خارج نمی‌شوند.</string>
+    <string name="pair_steps">در داراکاو به «پیامک‌های بانکی» ← «گوشی‌ها» ← «اتصال گوشی» بروید، این برنامه را انتخاب و کلید بسازید. سپس کد QR را اسکن کنید یا کد راه‌اندازی را در کادر زیر بچسبانید.</string>
+    <string name="scan">اسکن کد QR</string>
+    <string name="scan_prompt">کد QR نمایش‌داده‌شده در داراکاو را اسکن کنید</string>
+    <string name="code_hint">کد راه‌اندازی (darakav-sms:1:…)</string>
+    <string name="connect">اتصال</string>
+    <string name="invalid_code">این کد راه‌اندازی داراکاو نیست. در داراکاو کلید تازه‌ای برای گوشی بسازید و دوباره امتحان کنید.</string>
+    <string name="replace_title">اتصال جایگزین شود؟</string>
+    <string name="replace_message">این گوشی از قبل متصل است. از کلید جدید استفاده شود؟ پیامک‌هایی که هنوز ارسال نشده‌اند حذف می‌شوند.</string>
+    <string name="replace_action">جایگزین کن</string>
+    <string name="device_line">%1$s · %2$s</string>
+    <string name="insecure">این اتصال رمزگذاری نشده است (http). فقط برای آزمایش روی شبکهٔ خودتان از آن استفاده کنید.</string>
+    <string name="allow_sms">اجازهٔ دریافت پیامک</string>
+    <string name="battery">اجازهٔ کار در پس‌زمینه</string>
+    <string name="test">آزمایش اتصال</string>
+    <string name="testing">در حال بررسی اتصال…</string>
+    <string name="test_ok">به داراکاو متصل است.</string>
+    <string name="test_rejected">داراکاو دیگر کلید این گوشی را نمی‌پذیرد. گوشی را دوباره متصل کنید.</string>
+    <string name="test_failed">دسترسی به داراکاو ممکن نشد. پیامک‌ها روی گوشی می‌مانند و پس از برقراری اتصال ارسال می‌شوند.</string>
+    <string name="import_recent">وارد کردن پیامک‌های بانکی ۶۰ روز اخیر</string>
+    <string name="import_needs_permission">برای وارد کردن، اجازهٔ خواندن پیامک لازم است.</string>
+    <string name="import_done">%1$d پیامک بانکی در صف ارسال قرار گرفت. داراکاو موارد تکراری را نادیده می‌گیرد.</string>
+    <string name="disconnect">قطع اتصال</string>
+    <string name="disconnect_title">اتصال این گوشی قطع شود؟</string>
+    <string name="disconnect_message">پیامک‌های بانکی جدید دیگر به داراکاو فرستاده نمی‌شوند. گوشی را در داراکاو ← «پیامک‌های بانکی» ← «گوشی‌ها» هم حذف کنید.</string>
+    <string name="state_active">پیامک‌های بانکی جدید ارسال می‌شوند.</string>
+    <string name="state_no_permission">ارسال متوقف است: اجازهٔ دریافت پیامک را بدهید.</string>
+    <string name="state_rejected">متوقف شد: کلید در داراکاو حذف شده است. گوشی را دوباره متصل کنید.</string>
+    <string name="last_sent">آخرین ارسال %1$s · تاکنون %2$d پیامک</string>
+    <string name="nothing_sent">هنوز چیزی ارسال نشده است.</string>
+    <string name="pending">%1$d پیامک در انتظار ارسال</string>
+    <string name="last_problem">آخرین مشکل: %1$s</string>
+    <string name="privacy">فقط پیامک‌هایی که شبیه تراکنش بانکی هستند، از طریق اتصال بالا ارسال می‌شوند. کلید فقط در همین برنامه نگهداری می‌شود و در پشتیبان‌گیری قرار نمی‌گیرد.</string>
+</resources>
