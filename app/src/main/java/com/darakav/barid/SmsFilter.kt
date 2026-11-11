@@ -20,7 +20,11 @@ object SmsFilter {
     // Not a transaction: a request waiting for the owner's reply (a loan application to confirm), or a
     // notice of money on its way ("… جهت واریز به حساب شما … ارسال گردید", a dividend notice); the
     // bank's own SMS reports the actual deposit.
-    private val request = Regex("در\\s*صورت\\s*(?:عدم\\s*)?تا[یئ]ید|درخواست\\s*تسهیلات|جهت\\s*واریز|سهامدار\\s*محترم")
+    // Reminders ("قسط … سررسید می‌شود") and future deposits ("واریز می‌گردد", "طی روزهای آتی") too.
+    private val request = Regex(
+        "در\\s*صورت\\s*(?:عدم\\s*)?تا[یئ]ید|درخواست\\s*تسهیلات|جهت\\s*واریز|سهامدار\\s*محترم" +
+            "|سررسید\\s*می\\s*شود|واریز\\s*(?:می\\s*گردد|می\\s*شود|خواهد\\s*شد)|روزهای\\s*آتی",
+    )
     private val amount = Regex("\\d{1,3}(?:[,٬]\\d{3})+|[+-]\\s*\\d{4,}|\\d{4,}\\s*[+-]")
 
     fun normalize(text: String): String = buildString(text.length) {

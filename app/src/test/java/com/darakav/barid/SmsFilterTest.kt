@@ -44,6 +44,9 @@ class SmsFilterTest {
     @Test
     fun requestsAwaitingAReplyStayOnThePhone() {
         // Synthetic loan application from a recognized bank, asking for a reply.
+        // Synthetic installment reminder naming a bank, and a future reimbursement.
+        assertFalse(SmsFilter.shouldForward("PayApp", "تسویه زودتر از موعد وام بانک ملت\nکاربر گرامی\nقسط بعدی شما به مبلغ ۵۰٬۰۰۰٬۰۰۰ ریال ۳ روز دیگر سررسید می شود.\nتاریخ سررسید:۱۴۰۵/۰۹/۰۱\nمشاهده و پرداخت: example.com/x"))
+        assertFalse(SmsFilter.shouldForward("Insurer", "بیمه شده گرامی، مبلغ 12,345,678 ریال بابت هزینه درمانی مورد تایید قرار گرفت و طی روزهای آتی به حساب شما واریز می‌گردد."))
         // Synthetic dividend notice that names a bank: the bank's own SMS reports the deposit.
         assertFalse(SmsFilter.shouldForward("Registry", "سهامدار محترم؛ نام نمونه، مبلغ 150,000 ریال بابت سود نماد نمونه جهت واریز به حساب شما نزد بانک سامان ارسال گردید."))
         assertFalse(SmsFilter.shouldForward("RefahBank", "مشتری گرامی\nبانک رفاه درحال ثبت درخواست تسهیلات به مبلغ 500,000,000 ریال است. لطفا درصورت تایید عدد 1 را ارسال نمایید."))
