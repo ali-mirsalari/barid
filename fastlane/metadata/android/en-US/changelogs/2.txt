@@ -1,0 +1,1 @@
+Transfer confirmation codes are no longer forwarded: "رمز" followed by a number without a colon, and messages carrying Android's code-autofill signature, now stay on the phone.

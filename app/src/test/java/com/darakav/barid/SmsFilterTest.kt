@@ -21,4 +21,20 @@ class SmsFilterTest {
         assertFalse(SmsFilter.shouldForward("Promo", "جشنواره بزرگ تخفیف"))
         assertFalse(SmsFilter.shouldForward("700717", ""))
     }
+
+    @Test
+    fun transferConfirmationCodesStayOnThePhone() {
+        // Synthetic: a mobile-bank transfer code without a colon, ending with the autofill app hash.
+        assertFalse(SmsFilter.shouldForward("RefahBank", "بانک رفاه\nهمراه بانک-پل\n مبلغ:12,500,000R\n به:\nIR12**3400\n رمز 48213\n03/14 10:05\nQx7PdLm2vZa"))
+        assertFalse(SmsFilter.shouldForward("BankX", "بانک ایکس مبلغ 2,000,000 ریال رمز ۴۸۲۱۳"))
+        assertFalse(SmsFilter.shouldForward("BankX", "<#> بانک ایکس مبلغ 2,000,000 ریال کد 4821"))
+        assertFalse(SmsFilter.shouldForward("BankX", "بانک ایکس خرید 2,000,000 ریال\nکد: 4821\nFA9b+Qe/1Zk"))
+    }
+
+    @Test
+    fun ordinaryTransactionsAreNotMistakenForCodes() {
+        assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nخرید رمزارز\nبرداشت: 2,000,000 ریال\nمانده: 9,000,000"))
+        assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nبرداشت: 2,000,000 ریال\nحساب\n01000000001"))
+        assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nواریز: 2,000,000 ریال\nکد پیگیری 123456"))
+    }
 }
