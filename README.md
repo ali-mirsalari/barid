@@ -52,12 +52,14 @@ To build without installing the SDK, use Docker. Docker Hub images reach Iran th
 ```sh
 docker pull cimg/android:2026.10.1
 cp -a . /tmp/barid && chmod -R a+rwX /tmp/barid && mkdir -p /tmp/barid-gradle && chmod a+rwX /tmp/barid-gradle
+mkdir -p ~/.local/share/barid-dev/android && chmod a+rwX ~/.local/share/barid-dev/android
 docker run --rm --network host -e GRADLE_USER_HOME=/g -v /tmp/barid-gradle:/g -v /tmp/barid:/w -w /w \
+  -e ANDROID_USER_HOME=/k -v ~/.local/share/barid-dev/android:/k \
   cimg/android:2026.10.1 bash -c 'umask 000; ./gradlew --no-daemon -PgoogleMavenMirror=https://maven.myket.ir testDebugUnitTest assembleDebug lintDebug'
 # APK: /tmp/barid/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-`--network host` avoids connection timeouts seen on Docker's bridge network.
+`--network host` avoids connection timeouts seen on Docker's bridge network. The `/k` mount keeps the debug signing key between runs; without it every container makes a new key and each test build must be uninstalled before the next one installs.
 
 The GitHub workflow (`.github/workflows/build.yml`) builds, tests and lints the debug APK on every push and keeps it as a run artifact.
 
@@ -77,6 +79,8 @@ storePassword=…
 keyAlias=barid
 keyPassword=…
 ```
+
+For testing speed on a phone, `./gradlew assemblePreview` builds the optimized release code signed with the local debug key (installs over debug builds; not for distribution). Debug builds are much slower in Compose, especially in the first seconds.
 
 Build with `./gradlew assembleRelease` (`app/build/outputs/apk/release/app-release.apk`). Increase `versionCode` for every release; Android installs an update only when it is signed with the same key.
 
