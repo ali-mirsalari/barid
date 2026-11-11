@@ -44,6 +44,8 @@ class MessageQueue(context: Context) {
 
     fun size(): Int = synchronized(LOCK) { readAll().size }
 
+    fun ids(): Set<String> = synchronized(LOCK) { readAll().mapTo(HashSet()) { it.id } }
+
     fun clear() {
         synchronized(LOCK) { file.delete() }
     }

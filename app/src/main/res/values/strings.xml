@@ -179,4 +179,5 @@
     </plurals>
     <string name="nothing_waiting">Nothing is waiting.</string>
     <string name="send_failed">Couldn\'t send yet. Barid will keep trying.</string>
+    <string name="card_waiting_pending">Not sent yet. Your phone may be holding Barid back in the background; it sends while the app is open.</string>
 </resources>

@@ -50,6 +50,18 @@ class ActivityLog(context: Context) {
         write(readAll().map { if (it.id in ids) it.copy(status = status, sentAt = at) else it })
     }
 
+    /**
+     * Marks as sent the entries still shown as waiting whose message is no longer queued: delivery can
+     * finish between queueing a message and listing it, which would otherwise leave it waiting forever.
+     * Safe because messages are always queued before they are listed.
+     */
+    fun settle(queued: Set<String>) = synchronized(LOCK) {
+        val all = readAll()
+        if (all.none { it.status == LogEntry.Status.WAITING && it.id !in queued }) return@synchronized
+        val now = System.currentTimeMillis()
+        write(all.map { if (it.status == LogEntry.Status.WAITING && it.id !in queued) it.copy(status = LogEntry.Status.SENT, sentAt = now) else it })
+    }
+
     /** Newest first. */
     fun recent(limit: Int = MAX): List<LogEntry> = synchronized(LOCK) { readAll().asReversed().take(limit) }
 

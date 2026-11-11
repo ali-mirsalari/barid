@@ -25,7 +25,10 @@ object Delivery {
     private val mutex = Mutex()
 
     suspend fun run(context: Context): Outcome = mutex.withLock {
-        withContext(Dispatchers.IO) { deliver(context.applicationContext) }
+        withContext(Dispatchers.IO) {
+            val app = context.applicationContext
+            deliver(app).also { ActivityLog(app).settle(MessageQueue(app).ids()) }
+        }
     }
 
     private fun deliver(context: Context): Outcome {

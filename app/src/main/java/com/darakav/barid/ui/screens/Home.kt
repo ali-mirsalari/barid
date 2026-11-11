@@ -98,11 +98,12 @@ fun HomeScreen(
                 PrimaryButton(stringResource(R.string.action_allow_sms), onAllowSms, Modifier.fillMaxWidth())
             }
         }
-        if (state.queueSize > 0 && !state.rejected && (state.lastError != null || sending)) item {
+        if (state.queueSize > 0 && !state.rejected) item {
             val locale = Format.locale()
             val body = if (state.lastError != null) {
                 stringResource(R.string.card_waiting_body, Format.reason(state.lastError), Format.ltr(state.lastError))
-            } else stringResource(R.string.card_waiting_sending)
+            } else if (sending) stringResource(R.string.card_waiting_sending)
+            else stringResource(R.string.card_waiting_pending)
             Notice(
                 BaridIcons.Clock, c.warning, c.warningSurface,
                 pluralStringResource(R.plurals.card_waiting_title, state.queueSize, Format.number(state.queueSize.toLong(), locale)), body,
@@ -162,7 +163,7 @@ private fun Hero(state: Snapshot, now: Long) {
             when {
                 state.rejected -> StatusPill(stringResource(R.string.status_stopped), Tone.DANGER)
                 !state.smsGranted -> StatusPill(stringResource(R.string.status_needs_sms), Tone.WAIT)
-                state.queueSize > 0 && state.lastError != null -> StatusPill(stringResource(R.string.status_waiting_network), Tone.WAIT)
+                state.queueSize > 0 -> StatusPill(stringResource(R.string.status_waiting_network), Tone.WAIT)
                 else -> StatusPill(stringResource(R.string.status_forwarding), Tone.OK)
             }
             Spacer(Modifier.height(12.dp))

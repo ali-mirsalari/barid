@@ -171,4 +171,5 @@
     </plurals>
     <string name="nothing_waiting">پیامی در صف نیست.</string>
     <string name="send_failed">هنوز ارسال نشد. برید دوباره تلاش می‌کند.</string>
+    <string name="card_waiting_pending">هنوز فرستاده نشده. ممکن است گوشی برید را در پس‌زمینه متوقف کرده باشد؛ تا وقتی برنامه باز است ارسال می‌شود.</string>
 </resources>

@@ -176,10 +176,15 @@ class MainActivity : AppCompatActivity() {
                 refresh()
             }
         }
+        // While the app is open, anything waiting is sent right away (and retried each minute).
         LaunchedEffect(Unit) {
             lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
-                val waiting = withContext(Dispatchers.IO) { MessageQueue(applicationContext).size() }
-                if (waiting > 0 && !settings.rejected) sendNow(report = false)
+                while (true) {
+                    val waiting = withContext(Dispatchers.IO) { MessageQueue(applicationContext).size() }
+                    val due = System.currentTimeMillis() - settings.lastAttemptAt > 60_000 || settings.lastError == null
+                    if (waiting > 0 && !settings.rejected && due) sendNow(report = false)
+                    delay(5_000)
+                }
             }
         }
 

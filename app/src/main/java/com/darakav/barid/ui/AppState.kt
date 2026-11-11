@@ -45,7 +45,11 @@ data class Snapshot(
 
         fun load(context: Context): Snapshot {
             val settings = Settings(context)
-            val recent = ActivityLog(context).recent()
+            val queue = MessageQueue(context)
+            val log = ActivityLog(context)
+            val queued = queue.ids()
+            log.settle(queued)
+            val recent = log.recent()
             val startOfDay = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
             }.timeInMillis
@@ -53,7 +57,7 @@ data class Snapshot(
             return Snapshot(
                 pairing = settings.pairing,
                 rejected = settings.rejected,
-                queueSize = MessageQueue(context).size(),
+                queueSize = queued.size,
                 lastSentAt = settings.lastSentAt,
                 lastError = settings.lastError,
                 lastAttemptAt = settings.lastAttemptAt,
