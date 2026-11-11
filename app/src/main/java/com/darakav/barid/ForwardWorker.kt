@@ -38,7 +38,11 @@ class ForwardWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 Forwarder.Result.Invalid -> for (single in batch) {
                     when (Forwarder.send(pairing, listOf(single))) {
                         Forwarder.Result.Ok -> delivered(settings, queue, listOf(single))
-                        Forwarder.Result.Invalid -> { queue.remove(listOf(single.id)); settings.lastError = "HTTP 400" }
+                        Forwarder.Result.Invalid -> {
+                            queue.remove(listOf(single.id))
+                            ActivityLog(applicationContext).mark(listOf(single.id), LogEntry.Status.SKIPPED)
+                            settings.lastError = "HTTP 400"
+                        }
                         else -> return@withContext Result.retry()
                     }
                 }
@@ -53,6 +57,7 @@ class ForwardWorker(context: Context, params: WorkerParameters) : CoroutineWorke
 
     private fun delivered(settings: Settings, queue: MessageQueue, batch: List<Queued>) {
         queue.remove(batch.map { it.id })
+        ActivityLog(applicationContext).mark(batch.map { it.id }, LogEntry.Status.SENT)
         settings.lastSentAt = System.currentTimeMillis()
         settings.sentCount = settings.sentCount + batch.size
         settings.lastError = null
@@ -67,6 +72,10 @@ class ForwardWorker(context: Context, params: WorkerParameters) : CoroutineWorke
                 .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
                 .build()
             WorkManager.getInstance(context).enqueueUniqueWork(NAME, ExistingWorkPolicy.APPEND_OR_REPLACE, request)
+        }
+
+        fun cancel(context: Context) {
+            WorkManager.getInstance(context).cancelUniqueWork(NAME)
         }
     }
 }

@@ -23,13 +23,14 @@ data class Queued(val id: String, val from: String, val text: String, val receiv
 class MessageQueue(context: Context) {
     private val file = File(context.applicationContext.filesDir, "queue.jsonl")
 
-    fun add(from: String, text: String, receivedStamp: Long) {
-        synchronized(LOCK) {
-            val items = readAll()
-            if (items.any { it.from == from && it.text == text }) return
-            // Bounded: an offline phone keeps the newest messages.
-            write((items + Queued(UUID.randomUUID().toString(), from, text, receivedStamp)).takeLast(MAX))
-        }
+    /** Returns the new item's ID, or null when the same message is already waiting. */
+    fun add(from: String, text: String, receivedStamp: Long): String? = synchronized(LOCK) {
+        val items = readAll()
+        if (items.any { it.from == from && it.text == text }) return null
+        val id = UUID.randomUUID().toString()
+        // Bounded: an offline phone keeps the newest messages.
+        write((items + Queued(id, from, text, receivedStamp)).takeLast(MAX))
+        id
     }
 
     fun peek(limit: Int): List<Queued> = synchronized(LOCK) { readAll().take(limit) }

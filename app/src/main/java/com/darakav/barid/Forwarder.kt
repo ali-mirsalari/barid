@@ -6,13 +6,13 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
-/** Talks to Darakav's `/api/sms/ingest` with the phone key; never logs message text. */
+/** Talks to the paired server (Darakav's `/api/sms/ingest`) with the phone key; never logs message text. */
 object Forwarder {
     const val BATCH = 5
 
     sealed interface Result {
         data object Ok : Result
-        /** The key was removed in Darakav or never valid. */
+        /** The key was removed on the server or never valid. */
         data object Rejected : Result
         /** The server refused this batch's content (e.g. a message too long). */
         data object Invalid : Result
@@ -44,7 +44,7 @@ object Forwarder {
             connection.readTimeout = 20_000
             connection.setRequestProperty("Authorization", "Bearer " + pairing.key)
             connection.setRequestProperty("Accept", "application/json")
-            connection.setRequestProperty("User-Agent", "DarakavSms/" + BuildConfig.VERSION_NAME)
+            connection.setRequestProperty("User-Agent", "Barid/" + BuildConfig.VERSION_NAME)
             if (body != null) {
                 connection.doOutput = true
                 connection.setRequestProperty("Content-Type", "application/json; charset=utf-8")
