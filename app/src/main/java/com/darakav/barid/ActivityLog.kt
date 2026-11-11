@@ -57,7 +57,7 @@ class ActivityLog(context: Context) {
 
     private fun readAll(): List<LogEntry> {
         if (!file.exists()) return emptyList()
-        return file.readLines().mapNotNull { runCatching { LogEntry.fromJson(JSONObject(it)) }.getOrNull() }
+        return distinct(file.readLines().mapNotNull { runCatching { LogEntry.fromJson(JSONObject(it)) }.getOrNull() })
     }
 
     private fun write(items: List<LogEntry>) {
@@ -68,6 +68,18 @@ class ActivityLog(context: Context) {
 
     companion object {
         private val LOCK = Any()
+
+        /**
+         * One entry per message: copies (the same SMS imported again before repeats were detected) share
+         * the received time, bank, direction and amount. The sent copy wins, then the waiting one.
+         */
+        fun distinct(entries: List<LogEntry>): List<LogEntry> {
+            val rank = mapOf(LogEntry.Status.SENT to 0, LogEntry.Status.WAITING to 1, LogEntry.Status.SKIPPED to 2)
+            val best = entries.groupBy { listOf(it.receivedAt, it.bank, it.direction, it.amount) }
+                .mapValues { (_, copies) -> copies.minBy { rank.getValue(it.status) }.id }
+            val keep = best.values.toSet()
+            return entries.filter { it.id in keep }
+        }
         const val MAX = 300
     }
 }

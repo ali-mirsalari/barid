@@ -158,4 +158,25 @@
     <string name="action_view_source">View the source code</string>
     <string name="section_licenses">Licenses</string>
     <string name="made_by_darakav">Made by Darakav</string>
+    <string name="action_send_now">Send now</string>
+    <plurals name="card_waiting_title">
+        <item quantity="one">%1$s message is waiting</item>
+        <item quantity="other">%1$s messages are waiting</item>
+    </plurals>
+    <string name="card_waiting_body">The last try didn\'t go through: %1$s (%2$s). Barid keeps trying on its own.</string>
+    <string name="card_waiting_sending">Sending…</string>
+    <string name="reason_busy">the server asked to slow down</string>
+    <string name="reason_server">the server had a problem</string>
+    <string name="reason_moved">the server address has moved; connect again with a new code</string>
+    <string name="reason_refused">the server refused the request; in Darakav, check that Bank SMS is turned on</string>
+    <string name="reason_tls">the secure connection failed</string>
+    <string name="reason_slow">the server took too long to answer</string>
+    <string name="reason_offline">the server couldn\'t be reached</string>
+    <string name="reason_other">a connection error</string>
+    <plurals name="sent_now">
+        <item quantity="one">%d message sent.</item>
+        <item quantity="other">%d messages sent.</item>
+    </plurals>
+    <string name="nothing_waiting">Nothing is waiting.</string>
+    <string name="send_failed">Couldn\'t send yet. Barid will keep trying.</string>
 </resources>

@@ -41,17 +41,34 @@ object Forwarder {
     }
 
     private fun request(pairing: Pairing, method: String, body: String?): Result {
+        var url = pairing.url
+        repeat(MAX_REDIRECTS + 1) {
+            when (val step = attempt(pairing, url, method, body)) {
+                is Step.Done -> return step.result
+                is Step.Redirect -> url = step.to
+            }
+        }
+        return Result.Retry("Too many redirects")
+    }
+
+    private sealed interface Step {
+        data class Done(val result: Result) : Step
+        data class Redirect(val to: String) : Step
+    }
+
+    private fun attempt(pairing: Pairing, url: String, method: String, body: String?): Step {
         val connection = try {
-            URL(pairing.url).openConnection() as HttpURLConnection
+            URL(url).openConnection() as HttpURLConnection
         } catch (e: IOException) {
-            return Result.Retry(e.javaClass.simpleName)
+            return Step.Done(Result.Retry(e.javaClass.simpleName))
         } catch (e: IllegalArgumentException) {
-            return Result.Retry(e.javaClass.simpleName)
+            return Step.Done(Result.Retry(e.javaClass.simpleName))
         }
         return try {
             connection.requestMethod = method
             connection.connectTimeout = 15_000
             connection.readTimeout = 20_000
+            // Redirects are followed below, only where the key may safely go.
             connection.instanceFollowRedirects = false
             pairing.auth?.let { (name, value) -> connection.setRequestProperty(name, value) }
             connection.setRequestProperty("Accept", "application/json")
@@ -61,12 +78,34 @@ object Forwarder {
                 connection.setRequestProperty("Content-Type", Payload.contentType(pairing.template))
                 connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
             }
-            classify(connection.responseCode, pairing.darakav)
+            val code = connection.responseCode
+            val target = if (code in REDIRECTS) redirectTarget(url, connection.getHeaderField("Location")) else null
+            if (target != null) Step.Redirect(target) else Step.Done(classify(code, pairing.darakav))
         } catch (e: IOException) {
-            Result.Retry(e.javaClass.simpleName)
+            Step.Done(Result.Retry(e.javaClass.simpleName))
         } finally {
             connection.disconnect()
         }
+    }
+
+    private const val MAX_REDIRECTS = 3
+    // Not 303, which asks for a GET and would turn a delivery into a connection check.
+    private val REDIRECTS = setOf(301, 302, 307, 308)
+
+    /**
+     * Where to resend after a redirect, or null to stop: only to the same site (the host itself or its
+     * `www.` twin) and never from HTTPS down to HTTP, so the key and messages cannot be led elsewhere.
+     * Typical cases: `http://` to `https://`, `www.` to the bare domain.
+     */
+    fun redirectTarget(from: String, location: String?): String? {
+        if (location.isNullOrBlank()) return null
+        val source = runCatching { java.net.URI(from) }.getOrNull() ?: return null
+        val target = runCatching { source.resolve(location.trim()) }.getOrNull() ?: return null
+        val scheme = target.scheme?.lowercase()
+        if (scheme != "https" && !(scheme == "http" && source.scheme.equals("http", ignoreCase = true))) return null
+        fun bare(host: String?) = host?.lowercase()?.removePrefix("www.")
+        if (target.host == null || bare(target.host) != bare(source.host)) return null
+        return target.toString()
     }
 
     /** Darakav answers 401 for a removed key; other servers may also use 403, and 422 for bad content. */

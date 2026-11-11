@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
@@ -60,6 +61,8 @@ fun HomeScreen(
     xiaomi: Boolean,
     importing: Boolean,
     testing: Boolean,
+    sending: Boolean,
+    onSendNow: () -> Unit,
     onSettings: () -> Unit,
     onSeeAll: () -> Unit,
     onAllowSms: () -> Unit,
@@ -93,6 +96,18 @@ fun HomeScreen(
         } else if (!state.smsGranted) item {
             Notice(BaridIcons.Message, c.accent, c.accentSoft, stringResource(R.string.card_sms_title), stringResource(R.string.card_sms_body)) {
                 PrimaryButton(stringResource(R.string.action_allow_sms), onAllowSms, Modifier.fillMaxWidth())
+            }
+        }
+        if (state.queueSize > 0 && !state.rejected && (state.lastError != null || sending)) item {
+            val locale = Format.locale()
+            val body = if (state.lastError != null) {
+                stringResource(R.string.card_waiting_body, Format.reason(state.lastError), Format.ltr(state.lastError))
+            } else stringResource(R.string.card_waiting_sending)
+            Notice(
+                BaridIcons.Clock, c.warning, c.warningSurface,
+                pluralStringResource(R.plurals.card_waiting_title, state.queueSize, Format.number(state.queueSize.toLong(), locale)), body,
+            ) {
+                PrimaryButton(stringResource(R.string.action_send_now), onSendNow, Modifier.fillMaxWidth(), busy = sending)
             }
         }
         if (!state.batteryOk && !state.rejected) item {

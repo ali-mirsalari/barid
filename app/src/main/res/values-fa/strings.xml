@@ -150,4 +150,25 @@
     <string name="action_view_source">دیدن کد منبع</string>
     <string name="section_licenses">مجوزها</string>
     <string name="made_by_darakav">ساخت داراکاو</string>
+    <string name="action_send_now">ارسال همین حالا</string>
+    <plurals name="card_waiting_title">
+        <item quantity="one">%1$s پیام در صف است</item>
+        <item quantity="other">%1$s پیام در صف است</item>
+    </plurals>
+    <string name="card_waiting_body">تلاش آخر انجام نشد: %1$s (%2$s). برید خودش دوباره تلاش می‌کند.</string>
+    <string name="card_waiting_sending">در حال ارسال…</string>
+    <string name="reason_busy">سرور خواست درخواست‌ها کمتر شوند</string>
+    <string name="reason_server">سرور با مشکل روبه‌رو شد</string>
+    <string name="reason_moved">آدرس سرور تغییر کرده؛ با کد تازه دوباره وصل شوید</string>
+    <string name="reason_refused">سرور درخواست را نپذیرفت؛ در داراکاو روشن بودن پیامک‌های بانکی را بررسی کنید</string>
+    <string name="reason_tls">اتصال امن برقرار نشد</string>
+    <string name="reason_slow">پاسخ سرور خیلی طول کشید</string>
+    <string name="reason_offline">دسترسی به سرور ممکن نشد</string>
+    <string name="reason_other">خطای اتصال</string>
+    <plurals name="sent_now">
+        <item quantity="one">%d پیام فرستاده شد.</item>
+        <item quantity="other">%d پیام فرستاده شد.</item>
+    </plurals>
+    <string name="nothing_waiting">پیامی در صف نیست.</string>
+    <string name="send_failed">هنوز ارسال نشد. برید دوباره تلاش می‌کند.</string>
 </resources>

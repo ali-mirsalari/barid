@@ -132,6 +132,7 @@ class MainActivity : AppCompatActivity() {
 
         var message by remember { mutableStateOf<String?>(null) }
         var importing by remember { mutableStateOf(false) }
+        var sending by remember { mutableStateOf(false) }
         var testing by remember { mutableStateOf(false) }
         var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
         LaunchedEffect(Unit) { while (true) { now = System.currentTimeMillis(); delay(30_000) } }
@@ -157,6 +158,31 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Delivers from the app as well as in the background, since some phones (HyperOS, MIUI) hold
+        // background work back for a long time. Quiet unless the owner asked.
+        fun sendNow(report: Boolean) {
+            if (sending) return
+            sending = true
+            scope.launch {
+                val outcome = Delivery.run(applicationContext)
+                if (report) message = when (outcome) {
+                    is Delivery.Outcome.Done ->
+                        if (outcome.sent > 0) resources.getQuantityString(R.plurals.sent_now, outcome.sent, outcome.sent) else getString(R.string.nothing_waiting)
+                    Delivery.Outcome.Rejected -> getString(R.string.test_rejected)
+                    is Delivery.Outcome.Failed -> getString(R.string.send_failed)
+                }
+                if (outcome is Delivery.Outcome.Failed) ForwardWorker.schedule(applicationContext)
+                sending = false
+                refresh()
+            }
+        }
+        LaunchedEffect(Unit) {
+            lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                val waiting = withContext(Dispatchers.IO) { MessageQueue(applicationContext).size() }
+                if (waiting > 0 && !settings.rejected) sendNow(report = false)
+            }
+        }
+
         val smsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             if (!granted && !shouldShowRequestPermissionRationale(Manifest.permission.RECEIVE_SMS)) openAppSettings()
             scope.launch { refresh() }
@@ -168,6 +194,7 @@ class MainActivity : AppCompatActivity() {
                 message = if (count > 0) resources.getQuantityString(R.plurals.import_done, count, count) else getString(R.string.import_none)
                 importing = false
                 refresh()
+                if (count > 0) sendNow(report = false)
             }
         }
         val readSmsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -181,6 +208,8 @@ class MainActivity : AppCompatActivity() {
         fun paired(pairing: Pairing, confirmed: Boolean = false) {
             if (!confirmed && !pairing.trusted) { pending = pairing; return }
             pending = null
+            // Repeats are remembered per server: a different server may receive everything again.
+            if (settings.pairing?.url != pairing.url) Seen(applicationContext).clear()
             settings.pairing = pairing
             haptics.performHapticFeedback(HapticFeedbackType.LongPress)
             ForwardWorker.schedule(applicationContext)
@@ -222,7 +251,8 @@ class MainActivity : AppCompatActivity() {
                             )
                             Screen.SERVER -> ServerScreen(snapshot.pairing, onBack = { pop() }, onConnect = { paired(it, confirmed = true) })
                             Screen.HOME -> HomeScreen(
-                                state = snapshot, now = now, xiaomi = isXiaomi(), importing = importing, testing = testing,
+                                state = snapshot, now = now, xiaomi = isXiaomi(), importing = importing, testing = testing, sending = sending,
+                                onSendNow = { sendNow(report = true) },
                                 onSettings = { push(Screen.SETTINGS) },
                                 onSeeAll = { push(Screen.ACTIVITY) },
                                 onAllowSms = { smsPermission.launch(Manifest.permission.RECEIVE_SMS) },
@@ -253,6 +283,7 @@ class MainActivity : AppCompatActivity() {
                                     settings.pairing = null
                                     MessageQueue(applicationContext).clear()
                                     ActivityLog(applicationContext).clear()
+                                    Seen(applicationContext).clear()
                                     ForwardWorker.cancel(applicationContext)
                                     go(Screen.WELCOME)
                                     scope.launch { refresh() }

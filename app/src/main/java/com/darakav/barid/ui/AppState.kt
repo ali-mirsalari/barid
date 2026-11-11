@@ -31,6 +31,7 @@ data class Snapshot(
     val queueSize: Int,
     val lastSentAt: Long,
     val lastError: String?,
+    val lastAttemptAt: Long,
     val recent: List<LogEntry>,
     val sentToday: Int,
     val smsGranted: Boolean,
@@ -40,7 +41,7 @@ data class Snapshot(
     val isDarakav: Boolean get() = pairing?.trusted == true
 
     companion object {
-        val Empty = Snapshot(null, false, 0, 0, null, emptyList(), 0, false, true)
+        val Empty = Snapshot(null, false, 0, 0, null, 0, emptyList(), 0, false, true)
 
         fun load(context: Context): Snapshot {
             val settings = Settings(context)
@@ -55,6 +56,7 @@ data class Snapshot(
                 queueSize = MessageQueue(context).size(),
                 lastSentAt = settings.lastSentAt,
                 lastError = settings.lastError,
+                lastAttemptAt = settings.lastAttemptAt,
                 recent = recent,
                 sentToday = recent.count { it.status == LogEntry.Status.SENT && it.sentAt >= startOfDay },
                 smsGranted = granted(context, Manifest.permission.RECEIVE_SMS),
@@ -75,18 +77,28 @@ object Format {
 
     fun isPersian(locale: Locale) = locale.language == "fa"
 
-    fun number(value: Long, locale: Locale): String = NumberFormat.getIntegerInstance(locale).format(value)
+    // Formatters are costly to create (ICU loads locale data), and lists format a value per row, so
+    // one of each is kept per locale. Formatters are not thread-safe: every use holds the cache lock.
+    private val formatters = HashMap<String, Any>()
+
+    @Suppress("UNCHECKED_CAST")
+    private fun <T : Any> cached(kind: String, locale: Locale, create: () -> T, use: (T) -> String): String = synchronized(formatters) {
+        use(formatters.getOrPut(kind + "|" + locale.toLanguageTag(), create) as T)
+    }
+
+    fun number(value: Long, locale: Locale): String =
+        cached("number", locale, { NumberFormat.getIntegerInstance(locale) }) { it.format(value) }
 
     @android.annotation.SuppressLint("SimpleDateFormat") // explicit 24-hour pattern; digits follow the locale
-    fun time(stamp: Long, locale: Locale): String =
-        android.icu.text.SimpleDateFormat("HH:mm", android.icu.util.ULocale.forLocale(locale)).format(stamp)
+    fun time(stamp: Long, locale: Locale): String = cached(
+        "time", locale, { android.icu.text.SimpleDateFormat("HH:mm", android.icu.util.ULocale.forLocale(locale)) },
+    ) { it.format(stamp) }
 
     @android.annotation.SuppressLint("SimpleDateFormat") // Jalali calendar in Persian needs an explicit ICU pattern
-    fun day(stamp: Long, locale: Locale): String {
+    fun day(stamp: Long, locale: Locale): String = cached("day", locale, {
         val uLocale = if (isPersian(locale)) android.icu.util.ULocale("fa_IR@calendar=persian") else android.icu.util.ULocale.forLocale(locale)
-        val pattern = if (isPersian(locale)) "EEEE d MMMM" else "EEEE, d MMMM"
-        return android.icu.text.SimpleDateFormat(pattern, uLocale).format(stamp)
-    }
+        android.icu.text.SimpleDateFormat(if (isPersian(locale)) "EEEE d MMMM" else "EEEE, d MMMM", uLocale)
+    }) { it.format(stamp) }
 
     fun dayIndex(stamp: Long): Long {
         val c = Calendar.getInstance().apply { timeInMillis = stamp }
@@ -105,6 +117,24 @@ object Format {
             minutes < 60 * 24 -> stringResource(R.string.rel_hours, number(minutes / 60, locale))
             else -> stringResource(R.string.rel_days, number(minutes / (60 * 24), locale))
         }
+    }
+
+    /** Plain words for a delivery problem recorded as an HTTP status or an exception name. */
+    @Composable
+    fun reason(raw: String): String {
+        val code = raw.removePrefix("HTTP ").toIntOrNull()
+        return stringResource(
+            when {
+                code == 429 -> R.string.reason_busy
+                code != null && code >= 500 -> R.string.reason_server
+                code != null && code in 300..399 -> R.string.reason_moved
+                code != null -> R.string.reason_refused
+                raw.startsWith("SSL") -> R.string.reason_tls
+                raw.contains("Timeout") -> R.string.reason_slow
+                raw.contains("UnknownHost") || raw.contains("Connect") || raw.contains("NoRoute") -> R.string.reason_offline
+                else -> R.string.reason_other
+            },
+        )
     }
 
     fun bankName(bank: Bank?, locale: Locale): String? = bank?.let { if (isPersian(locale)) it.fa else it.en }

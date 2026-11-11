@@ -40,6 +40,11 @@ class Settings(context: Context) {
         get() = prefs.getLong("lastSentAt", 0)
         set(value) = prefs.edit { putLong("lastSentAt", value) }
 
+    /** When delivery was last tried, successful or not. */
+    var lastAttemptAt: Long
+        get() = prefs.getLong("lastAttemptAt", 0)
+        set(value) = prefs.edit { putLong("lastAttemptAt", value) }
+
     var sentCount: Int
         get() = prefs.getInt("sentCount", 0)
         set(value) = prefs.edit { putInt("sentCount", value) }

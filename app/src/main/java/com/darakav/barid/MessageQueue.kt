@@ -22,11 +22,14 @@ data class Queued(val id: String, val from: String, val text: String, val receiv
  */
 class MessageQueue(context: Context) {
     private val file = File(context.applicationContext.filesDir, "queue.jsonl")
+    private val seen = Seen(context)
 
-    /** Returns the new item's ID, or null when the same message is already waiting. */
+    /** Returns the new item's ID, or null for a repeat: already waiting, or forwarded before ([Seen]). */
     fun add(from: String, text: String, receivedStamp: Long): String? = synchronized(LOCK) {
         val items = readAll()
-        if (items.any { it.from == from && it.text == text }) return null
+        val key = Seen.key(from, text)
+        if (items.any { Seen.key(it.from, it.text) == key }) return null
+        if (!seen.firstTime(from, text)) return null
         val id = UUID.randomUUID().toString()
         // Bounded: an offline phone keeps the newest messages.
         write((items + Queued(id, from, text, receivedStamp)).takeLast(MAX))
