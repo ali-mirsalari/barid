@@ -67,7 +67,13 @@ CurrentVersionCode: 3
 4. F-Droid's update checker picks up the tag (`UpdateCheckMode: Tags`), builds it and compares the
    result with that APK. Until the APK is attached, F-Droid's build of that version fails.
 
-Until merge request !56871 is merged, step 4 does not happen on its own: the merge request names one
+**Status:** merge request !56871 was closed on 2026-11-12 by an F-Droid reviewer: an app must have been
+maintained for more than three months before inclusion. The repository went public on 2026-11-11, so
+submit again (a new merge request with the recipe above, updated to the latest release) on or after
+**2027-02-11**. Barid's built-in updater turns itself off when F-Droid (or another store) installed the
+app, so F-Droid users are updated by F-Droid only.
+
+While a merge request is open, step 4 does not happen on its own: the merge request names one
 exact build. After attaching the APK, replace that build in the fork's branch (`alimirsalari/fdroiddata`,
 `com.darakav.barid`) with the new versionName, versionCode and full commit hash, update
 `CurrentVersion`/`CurrentVersionCode`, push, and wait for the pipeline to verify the signature. Then update
