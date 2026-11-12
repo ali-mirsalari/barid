@@ -88,6 +88,7 @@ class MainActivity : AppCompatActivity() {
     private var snapshot by mutableStateOf(Snapshot.Empty)
     private var deepLink by mutableStateOf<Pairing?>(null)
     private var deepLinkInvalid by mutableStateOf(false)
+    private var installRequested by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -110,12 +111,23 @@ class MainActivity : AppCompatActivity() {
         setContent { App() }
     }
 
+    override fun onResume() {
+        super.onResume()
+        Updates.foreground = true
+    }
+
+    override fun onPause() {
+        Updates.foreground = false
+        super.onPause()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handle(intent)
     }
 
     private fun handle(intent: Intent?) {
+        if (intent?.action == Updates.ACTION_INSTALL) { installRequested = true; return }
         val data = intent?.data ?: return
         if (data.scheme != "darakav" && data.scheme != "barid") return
         val pairing = Pairing.parse(data.toString())
@@ -195,6 +207,37 @@ class MainActivity : AppCompatActivity() {
                     delay(5_000)
                 }
             }
+        }
+
+        var checkingUpdates by remember { mutableStateOf(false) }
+        fun installUpdate() {
+            scope.launch {
+                val started = withContext(Dispatchers.IO) { Updates.install(applicationContext) }
+                if (!started) message = getString(R.string.update_install_failed)
+            }
+        }
+        fun checkUpdates(report: Boolean) {
+            if (checkingUpdates) return
+            checkingUpdates = true
+            scope.launch {
+                val outcome = withContext(Dispatchers.IO) { Updates.run(applicationContext, install = false) }
+                if (report) message = when (outcome) {
+                    is Updates.Outcome.Ready -> getString(R.string.update_ready_title, outcome.version)
+                    Updates.Outcome.UpToDate -> getString(R.string.update_up_to_date)
+                    else -> getString(R.string.update_failed_row)
+                }
+                checkingUpdates = false
+                refresh()
+            }
+        }
+        LaunchedEffect(installRequested) { if (installRequested) { installRequested = false; installUpdate() } }
+        // Opening the app checks again when the last check is old; the background check does the rest.
+        LaunchedEffect(Unit) {
+            if (Updates.enabled(applicationContext) && System.currentTimeMillis() - settings.updateCheckedAt > 6 * 3_600_000L) checkUpdates(report = false)
+        }
+        val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            if (!granted && Build.VERSION.SDK_INT >= 33 && !shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS)) openAppSettings()
+            scope.launch { refresh() }
         }
 
         val smsPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -278,6 +321,12 @@ class MainActivity : AppCompatActivity() {
                                     else readSmsPermission.launch(Manifest.permission.READ_SMS)
                                 },
                                 onTest = { test() },
+                                onInstallUpdate = { installUpdate() },
+                                onAllowInstalls = { openInstallSettings() },
+                                onAllowNotifications = {
+                                    if (Build.VERSION.SDK_INT >= 33) notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                },
+                                onHideUpdatePrompt = { settings.updatePromptHidden = true; scope.launch { refresh() } },
                             )
                             Screen.SETTINGS -> SettingsScreen(
                                 state = snapshot, themeMode = themeMode, palette = palette, reduceTransparency = solid, language = language,
@@ -302,6 +351,14 @@ class MainActivity : AppCompatActivity() {
                                     go(Screen.WELCOME)
                                     scope.launch { refresh() }
                                 },
+                                checkingUpdates = checkingUpdates,
+                                onAutoUpdate = {
+                                    settings.autoUpdate = it
+                                    UpdateWorker.schedule(applicationContext)
+                                    scope.launch { refresh() }
+                                },
+                                onCheckUpdates = { checkUpdates(report = true) },
+                                onInstallUpdate = { installUpdate() },
                             )
                             Screen.ABOUT -> AboutScreen(onBack = { pop() })
                             Screen.ACTIVITY -> ActivityScreen(snapshot.recent, onBack = { pop() })
@@ -388,6 +445,16 @@ class MainActivity : AppCompatActivity() {
         try {
             startActivity(miui)
         } catch (_: Exception) {
+            openAppSettings()
+        }
+    }
+
+    /** "Install unknown apps" for Barid: lets updates install without asking each time (Android 12+). */
+    private fun openInstallSettings() {
+        val direct = Intent(AndroidSettings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:$packageName"))
+        try {
+            startActivity(direct)
+        } catch (_: ActivityNotFoundException) {
             openAppSettings()
         }
     }

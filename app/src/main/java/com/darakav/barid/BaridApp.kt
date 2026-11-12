@@ -16,6 +16,8 @@ class BaridApp : Application() {
             runCatching { CrashReport.save(this, thread, error) }
             previous?.uncaughtException(thread, error)
         }
+        // The app also starts for every incoming SMS, so updates are checked without the owner opening it.
+        runCatching { UpdateWorker.schedule(this) }
     }
 }
 

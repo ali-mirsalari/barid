@@ -71,6 +71,10 @@ fun HomeScreen(
     onReconnect: () -> Unit,
     onImport: () -> Unit,
     onTest: () -> Unit,
+    onInstallUpdate: () -> Unit = {},
+    onAllowInstalls: () -> Unit = {},
+    onAllowNotifications: () -> Unit = {},
+    onHideUpdatePrompt: () -> Unit = {},
 ) {
     val c = Barid.colors
     LazyColumn(
@@ -96,6 +100,23 @@ fun HomeScreen(
         } else if (!state.smsGranted) item {
             Notice(BaridIcons.Message, c.accent, c.accentSoft, stringResource(R.string.card_sms_title), stringResource(R.string.card_sms_body)) {
                 PrimaryButton(stringResource(R.string.action_allow_sms), onAllowSms, Modifier.fillMaxWidth())
+            }
+        }
+        val update = state.update
+        if (update.active && update.ready != null) item {
+            Notice(
+                BaridIcons.Download, c.accent, c.accentSoft,
+                stringResource(R.string.update_ready_title, Format.ltr(update.ready)), stringResource(R.string.update_ready_body),
+            ) {
+                PrimaryButton(stringResource(R.string.action_install_update), onInstallUpdate, Modifier.fillMaxWidth())
+            }
+        } else if (update.needsPermission && !update.promptHidden) item {
+            Notice(BaridIcons.Refresh, c.accent, c.accentSoft, stringResource(R.string.card_updates_title), stringResource(R.string.card_updates_body)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.padding(start = 36.dp)) {
+                    if (!update.installAllowed) QuietButton(stringResource(R.string.action_allow_installs), onAllowInstalls)
+                    else QuietButton(stringResource(R.string.action_allow_notifications), onAllowNotifications)
+                    QuietButton(stringResource(R.string.action_not_now), onHideUpdatePrompt, color = c.muted)
+                }
             }
         }
         if (state.queueSize > 0 && !state.rejected) item {

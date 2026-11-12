@@ -19,6 +19,7 @@ import com.darakav.barid.MessageQueue
 import com.darakav.barid.Pairing
 import com.darakav.barid.R
 import com.darakav.barid.Settings
+import com.darakav.barid.Updates
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
@@ -36,6 +37,7 @@ data class Snapshot(
     val sentToday: Int,
     val smsGranted: Boolean,
     val batteryOk: Boolean,
+    val update: UpdateState = UpdateState(),
 ) {
     val host: String get() = pairing?.host.orEmpty()
     val isDarakav: Boolean get() = pairing?.trusted == true
@@ -65,12 +67,39 @@ data class Snapshot(
                 sentToday = recent.count { it.status == LogEntry.Status.SENT && it.sentAt >= startOfDay },
                 smsGranted = granted(context, Manifest.permission.RECEIVE_SMS),
                 batteryOk = power?.isIgnoringBatteryOptimizations(context.packageName) ?: true,
+                update = UpdateState(
+                    store = Updates.store(context),
+                    auto = settings.autoUpdate,
+                    ready = settings.updateReady,
+                    checkedAt = settings.updateCheckedAt,
+                    failed = settings.updateError != null,
+                    installAllowed = Updates.installAllowed(context),
+                    notificationsAllowed = Updates.notificationsAllowed(context),
+                    promptHidden = settings.updatePromptHidden,
+                ),
             )
         }
 
         fun granted(context: Context, permission: String) =
             ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
     }
+}
+
+/** Updates as the screens show them; [store] set means a store updates Barid instead. */
+@Immutable
+data class UpdateState(
+    val store: String? = null,
+    val auto: Boolean = true,
+    val ready: String? = null,
+    val checkedAt: Long = 0,
+    val failed: Boolean = false,
+    val installAllowed: Boolean = true,
+    val notificationsAllowed: Boolean = true,
+    val promptHidden: Boolean = false,
+) {
+    val active: Boolean get() = store == null && auto
+    /** Something the owner should allow so updates reach them without opening Barid. */
+    val needsPermission: Boolean get() = active && (!installAllowed || !notificationsAllowed)
 }
 
 /** Locale-aware display helpers: Persian digits and the Jalali calendar in Persian. */

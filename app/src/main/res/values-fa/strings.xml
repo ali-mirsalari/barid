@@ -176,4 +176,27 @@
     <string name="crash_body">این گزارش را کپی کنید و برای سازنده بفرستید. محل خطا را نشان می‌دهد و فقط روی همین گوشی نگه داشته می‌شود.</string>
     <string name="crash_copy">کپی گزارش</string>
     <string name="crash_continue">ادامه</string>
+    <string name="section_updates">به‌روزرسانی</string>
+    <string name="auto_update">به‌روزرسانی خودکار</string>
+    <string name="auto_update_body">هر ۱۲ ساعت نسخه‌های برید را در گیت‌هاب بررسی می‌کند و نسخهٔ تازه را نصب می‌کند.</string>
+    <string name="check_updates">بررسی به‌روزرسانی</string>
+    <string name="update_checking">در حال بررسی…</string>
+    <string name="update_latest_row">به‌روز است · %1$s پیش بررسی شد</string>
+    <string name="update_failed_row">اتصال به گیت‌هاب ممکن نشد. برید دوباره تلاش می‌کند.</string>
+    <string name="update_ready_row">نسخهٔ %1$s آمادهٔ نصب است</string>
+    <string name="update_up_to_date">برید به‌روز است</string>
+    <string name="update_install_failed">نصب به‌روزرسانی شروع نشد. برید دوباره تلاش می‌کند.</string>
+    <string name="updates_by_store">به‌روزرسانی با فروشگاه برنامه</string>
+    <string name="updates_by_store_body">برید از یک فروشگاه نصب شده و همان فروشگاه آن را به‌روز نگه می‌دارد.</string>
+    <string name="update_channel">به‌روزرسانی</string>
+    <string name="update_ready_title">برید %1$s آماده است</string>
+    <string name="update_ready_body">نصبش کنید تا ارسال پیامک‌ها با آخرین اصلاحات کار کند. اتصال و تنظیمات شما می‌مانند.</string>
+    <string name="update_ready_notification">برای نصب به‌روزرسانی بزنید.</string>
+    <string name="action_install_update">نصب به‌روزرسانی</string>
+    <string name="card_updates_title">برید را به‌روز نگه دارید</string>
+    <string name="card_updates_body">اجازه دهید برید به‌روزرسانی‌هایش را نصب کند و خبرتان کند تا نسخه‌های تازه بدون باز کردن برنامه برسند.</string>
+    <string name="action_allow_installs">اجازهٔ نصب</string>
+    <string name="action_allow_notifications">اجازهٔ اعلان</string>
+    <string name="action_not_now">فعلاً نه</string>
+    <string name="about_privacy_5">برای بررسی به‌روزرسانی، برید آخرین نسخه را از گیت‌هاب می‌پرسد و هیچ اطلاعاتی از شما یا پیامک‌هایتان فرستاده نمی‌شود. می‌توانید آن را در تنظیمات خاموش کنید.</string>
 </resources>
