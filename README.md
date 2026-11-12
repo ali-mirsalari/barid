@@ -82,7 +82,7 @@ keyPassword=…
 
 For testing speed on a phone, `./gradlew assemblePreview` builds the optimized release code signed with the local debug key (installs over debug builds; not for distribution). Debug builds are much slower in Compose, especially in the first seconds.
 
-Build with `./gradlew assembleRelease` (`app/build/outputs/apk/release/app-release.apk`). Increase `versionCode` for every release; Android installs an update only when it is signed with the same key.
+Build with `./gradlew assembleRelease` (`app/build/outputs/apk/release/app-release.apk`). Increase `versionCode` for every release; Android installs an update only when it is signed with the same key. Build from the release tag and attach the APK to the GitHub release as `barid-<versionName>.apk`: F-Droid rebuilds the tag and ships that APK's signature only if the two are identical ([docs/FDROID.md](docs/FDROID.md)).
 
 Google Play requires its SMS permission declaration. Bazaar, Myket and F-Droid accept the app as is.
 

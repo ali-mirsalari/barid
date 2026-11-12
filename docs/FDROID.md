@@ -1,25 +1,20 @@
 # Publishing on F-Droid
 
 F-Droid builds Barid from this repository's source on its own servers (outside Iran, so no Maven
-mirror is needed) and signs it with F-Droid's key. Store texts, screenshots and changelogs come from
+mirror is needed). Builds are reproducible: F-Droid checks that its build is identical to the signed APK
+on the GitHub release and then ships that APK's signature (Barid's release key), so installs from
+F-Droid and from GitHub update each other. Store texts, screenshots and changelogs come from
 `fastlane/metadata/android/` (`en-US`, `fa`); a new release needs `changelogs/<versionCode>.txt` in both.
 
-## First submission
+## Recipe
 
-1. The repository must be public and tagged `v<versionName>` (for example `v1.0.0`).
-2. Fork https://gitlab.com/fdroid/fdroiddata (in the browser; it is too large to clone comfortably),
-   add `metadata/com.darakav.barid.yml` with the content below on a branch named `com.darakav.barid`,
-   and open a merge request titled "New app: Barid". F-Droid's CI builds it; if GitLab asks for a phone
-   number or card to run the fork's pipeline, do not give one: leave a note on the merge request and
-   the reviewers trigger it. Reviewers may ask questions there. A new app lists only its current build,
-   with `commit` set to the tag's full commit hash (`git rev-parse v1.0.1^{commit}`); F-Droid adds
-   later builds itself from new tags.
-3. After it is merged, the app appears within a few days at https://f-droid.org/packages/com.darakav.barid/
+`metadata/com.darakav.barid.yml` in https://gitlab.com/fdroid/fdroiddata (first submitted in merge
+request !56871):
 
 ```yaml
 Categories:
-  - Money
-  - Connectivity
+  - Finance Manager
+  - Phone & SMS
 License: GPL-3.0-only
 AuthorName: Darakav
 WebSite: https://darakav.com
@@ -31,27 +26,49 @@ AutoName: Barid
 
 RepoType: git
 Repo: https://github.com/ali-mirsalari/barid.git
+Binaries: https://github.com/ali-mirsalari/barid/releases/download/v%v/barid-%v.apk
 
 Builds:
-  - versionName: 1.0.1
-    versionCode: 2
-    commit: 2e98d9f0c7d65d1dd94d206bd23a60c5f9851d1d
+  - versionName: 1.0.2
+    versionCode: 3
+    commit: fd4cb587cc02aa3c722f3d1471d2a1f4ac56590b
     subdir: app
     gradle:
       - yes
+    prebuild: sed -i -e '/googleMavenMirror/d' ../settings.gradle.kts
+
+AllowedAPKSigningKeys: a7e745ed02870a86d8261b174ae5e48ebe5ed6374793ca9b3775dfde5c01a82d
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags
-CurrentVersion: 1.0.1
-CurrentVersionCode: 2
+CurrentVersion: 1.0.2
+CurrentVersionCode: 3
 ```
 
-## Later releases
+- `commit` is the tag's full commit hash (`git rev-parse v1.0.2^{commit}`); fdroiddata does not accept
+  tag names there. Before a new app is merged, only its current build is listed.
+- `prebuild` removes the optional Maven mirror (`maven(it)` in `settings.gradle.kts`, used only for
+  builds from Iran), which F-Droid's source scanner rejects as an unknown repository.
+- Categories must come from fdroiddata's list (`schemas/metadata.json`), sorted. The file ends with a
+  newline. `fdroid lint` and `fdroid rewritemeta` in the merge request's pipeline check both.
+- `Binaries` + `AllowedAPKSigningKeys` turn on reproducible builds. F-Droid's build job downloads the
+  GitHub APK, copies its signature onto its own build and fails if that does not verify.
 
-Increase `versionCode` and `versionName` in `app/build.gradle.kts`, add the changelogs, commit, and
-push a tag `v<versionName>`. F-Droid's update checker picks up new tags (`UpdateCheckMode: Tags`).
-Release tags (`v*`) are protected by a GitHub ruleset: they cannot be moved or deleted, because
-F-Droid builds exactly the tagged commit.
+## Releases
+
+1. Increase `versionCode` and `versionName` in `app/build.gradle.kts` and add the changelogs in both
+   locales. Merge the pull request.
+2. Tag the merged commit on `main` (`v<versionName>`) and push the tag. Release tags (`v*`) are protected
+   by a GitHub ruleset: they cannot be moved or deleted, because F-Droid builds exactly the tagged commit.
+3. Build the APK from the tag, signed by Gradle with `keystore.properties` (`./gradlew assembleRelease`,
+   README), and attach it to the GitHub release as `barid-<versionName>.apk`. The file name must match
+   `Binaries`.
+4. F-Droid's update checker picks up the tag (`UpdateCheckMode: Tags`), builds it and compares the
+   result with that APK. Until the APK is attached, F-Droid's build of that version fails.
+
+Release APKs leave out the commit hash (`vcsInfo.include = false`), so a build from the release branch
+before its squash merge is identical too. Do not re-sign an APK by hand with `apksigner`: it re-aligns
+entries unless given `--alignment-preserved`, and then F-Droid's copy of the signature does not verify.
 
 ## Notes for reviewers
 
@@ -59,5 +76,6 @@ F-Droid builds exactly the tagged commit.
   and only bank transactions go to the server the owner connected. No tracking, ads or proprietary
   libraries (AndroidX, Jetpack Compose, CameraX, ZXing, Haze).
 - `NonFreeNet` does not apply: the app sends only to a server the owner chooses; Darakav is one option.
-- Installs from F-Droid (F-Droid's key) and from GitHub releases (Barid's own key) cannot update each
-  other; switching means uninstalling first.
+- GitLab blocks Iranian IP addresses; reach it (and its API, for example with `glab`) through a proxy.
+  If GitLab asks for a phone number or card to run a fork's pipeline, do not give one: leave a note on
+  the merge request and the reviewers trigger it.
