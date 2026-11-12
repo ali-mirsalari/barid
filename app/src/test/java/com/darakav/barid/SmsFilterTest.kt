@@ -40,6 +40,9 @@ class SmsFilterTest {
         assertFalse(SmsFilter.shouldForward("Telecom", "صورتحساب این ماه شما 320,000 ریال است"))
         // Synthetic payment-app receipt: the bank's own SMS reports the same purchase.
         assertFalse(SmsFilter.shouldForward("PayApp", "خرید کتاب نمونه از (فروشگاه) به مبلغ ۸۵,۰۰۰ تومان.\nکیف پول نمونه\nشناسه: 123456r"))
+        assertFalse(SmsFilter.shouldForward("PayApp", "کاربر عزیز نمونه‌پی،\nمبلغ ۱۲۰,۰۰۰ تومان، بابت لغو سفارش، به کیف پول‌تان عودت داده شد.\nمشاهده موجودی: https://example.com/w"))
+        assertFalse(SmsFilter.shouldForward("PayApp", "مبلغ 50,000 تومان به کیف پول شما واریز شد."))
+        assertTrue(SmsFilter.shouldForward("Unknown", "مشتری گرامی، مانده حساب 838/000115456 شما 210,000,000 ریال است."))
     }
 
     @Test
