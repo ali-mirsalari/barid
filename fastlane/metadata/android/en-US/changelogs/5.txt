@@ -1,0 +1,1 @@
+Barid now keeps itself up to date: it checks for new versions every 12 hours and installs them, silently on Android 12 and newer once you allow it to install apps. You can turn this off in Settings. Installs from an app store are updated by the store.
