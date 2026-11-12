@@ -57,11 +57,13 @@ object SmsFilter {
         if (text.isBlank() || text.length > 1600) return false
         val t = normalize(text)
         if (secret.containsMatchIn(t) || forAutofill(text)) return false
-        // Personal numbers (09…/+989…) do not send bank messages.
-        val s = sender?.replace(" ", "") ?: ""
-        if (Regex("^(\\+98|0098|0)?9\\d{9}$").matches(s)) return false
         if (!amount.containsMatchIn(t) || request.containsMatchIn(t)) return false
-        if (Banks.detect(sender, t) == null) return accountWords.containsMatchIn(t)
+        val bank = Banks.detect(sender, t)
+        // Mobile-shaped numbers (09…/+989…) are people, except that some banks send from such lines
+        // (Blu uses a 0999 number): those messages still name the bank and show a balance or withdrawal.
+        val s = sender?.replace(" ", "") ?: ""
+        if (Regex("^(\\+98|0098|0)?9\\d{9}$").matches(s)) return bank != null && accountWords.containsMatchIn(t)
+        if (bank == null) return accountWords.containsMatchIn(t)
         return transaction.containsMatchIn(t) || currency.containsMatchIn(t)
     }
 }
