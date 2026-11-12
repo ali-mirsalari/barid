@@ -16,6 +16,12 @@ object SmsFilter {
     // From a sender that is not a recognized bank, only these mark a bank message (Darakav's server uses
     // the same rule): invoices, shops and payment apps send amounts with "خرید" or "پرداخت" too.
     private val accountWords = Regex("مانده|موجودی|برداشت|واریز")
+    // For those senders a balance word counts only with an amount on its line ("موجودی: 1,000"), not as a
+    // "مشاهده موجودی" link, and wallet, points, discount and cashback notices stay: an app's wallet is not
+    // a bank account.
+    private val depositOrWithdrawal = Regex("برداشت|واریز")
+    private val balanceWithAmount = Regex("(?:مانده|موجودی)[^\\n]{0,40}?(?:\\d{1,3}(?:[,٬]\\d{3})+|\\d{4,})")
+    private val wallet = Regex("کیف\\s*پول|امتیاز|کد\\s*تخفیف|کش\\s*بک|cashback|wallet", RegexOption.IGNORE_CASE)
     private val currency = Regex("ریال|تومان|\\d\\s*R\\b")
     // Not a transaction: a request waiting for the owner's reply (a loan application to confirm), or a
     // notice of money on its way ("… جهت واریز به حساب شما … ارسال گردید", a dividend notice); the
@@ -51,7 +57,8 @@ object SmsFilter {
 
     /**
      * True for messages worth forwarding: an amount-like number, and from a recognized bank a word of
-     * an account movement or a currency; from any other sender a balance, deposit or withdrawal word.
+     * an account movement or a currency; from any other sender a balance with its amount, or a deposit or
+     * withdrawal word, and no wallet notice.
      */
     fun shouldForward(sender: String?, text: String): Boolean {
         if (text.isBlank() || text.length > 1600) return false
@@ -63,7 +70,9 @@ object SmsFilter {
         // (Blu uses a 0999 number): those messages still name the bank and show a balance or withdrawal.
         val s = sender?.replace(" ", "") ?: ""
         if (Regex("^(\\+98|0098|0)?9\\d{9}$").matches(s)) return bank != null && accountWords.containsMatchIn(t)
-        if (bank == null) return accountWords.containsMatchIn(t)
+        if (bank == null)
+            return !wallet.containsMatchIn(t) &&
+                (depositOrWithdrawal.containsMatchIn(t) || balanceWithAmount.containsMatchIn(t))
         return transaction.containsMatchIn(t) || currency.containsMatchIn(t)
     }
 }
