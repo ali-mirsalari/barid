@@ -14,6 +14,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -32,7 +33,9 @@ import java.util.concurrent.TimeUnit
  * Keeps Barid up to date from its GitHub releases (README "Updates"). A background check every 12 hours
  * downloads a newer release's APK, checks that it is Barid, newer and signed with the installed app's
  * key, and installs it: silently on Android 12+ once the owner allowed Barid to install apps, otherwise
- * with a notification and a Home card. Off when a store (F-Droid, Google Play…) installed Barid: the
+ * with a notification and a Home card. Where the session install is refused (some Xiaomi HyperOS
+ * builds replace Android's installer), the APK opens in the phone's installer screen instead, as when
+ * it is opened from a file manager. Off when a store (F-Droid, Google Play…) installed Barid: the
  * store updates it. Only GitHub is contacted; nothing about the phone or its messages is sent.
  */
 object Updates {
@@ -133,12 +136,45 @@ object Updates {
         return Outcome.Ready(release.version)
     }
 
-    /** Starts installing the downloaded update; Android asks the owner only when it must. */
+    /**
+     * Starts installing the downloaded update; Android asks the owner only when it must. After a refused
+     * session install, the owner using the app gets the installer screen ([openInstaller]); in the
+     * background the notification waits for them.
+     */
     fun install(context: Context): Boolean {
         val app = context.applicationContext
-        val version = Settings(app).updateReady ?: return false
+        val settings = Settings(app)
+        val version = settings.updateReady ?: return false
         val apk = file(app, version)
         if (!apk.exists() || !verified(app, apk)) return false
+        if (settings.updateFallback) {
+            if (!foreground) { notifyReady(app); return true }
+            return openInstaller(app, apk)
+        }
+        if (!installSession(app, apk)) {
+            settings.updateFallback = true
+            return if (foreground) openInstaller(app, apk) else true.also { notifyReady(app) }
+        }
+        return true
+    }
+
+    /** The phone's own installer screen for the downloaded APK, which every Android build allows. */
+    private fun openInstaller(context: Context, apk: File): Boolean = runCatching {
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", apk)
+        context.startActivity(
+            Intent(Intent.ACTION_VIEW).setDataAndType(uri, "application/vnd.android.package-archive")
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }.isSuccess
+
+    /** Opens the installer screen after a refused session install, from the activity the owner is using. */
+    fun installFallback(context: Context): Boolean {
+        val app = context.applicationContext
+        val apk = Settings(app).updateReady?.let { file(app, it) } ?: return false
+        return apk.exists() && verified(app, apk) && openInstaller(context, apk)
+    }
+
+    private fun installSession(app: Context, apk: File): Boolean {
         val installer = app.packageManager.packageInstaller
         installer.mySessions.forEach { runCatching { installer.abandonSession(it.sessionId) } }
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
@@ -164,6 +200,7 @@ object Updates {
     private fun clear(context: Context) {
         val settings = Settings(context)
         settings.updateReady = null
+        settings.updateFallback = false
         File(context.filesDir, "updates").listFiles()?.forEach { it.delete() }
         context.getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION)
     }
@@ -268,8 +305,12 @@ class UpdateReceiver : BroadcastReceiver() {
                 } else Updates.notifyReady(context)
             }
             PackageInstaller.STATUS_SUCCESS -> Unit
-            // Cancelled or failed: the update stays ready, with its notice.
-            else -> Updates.notifyReady(context)
+            // Refused or cancelled (some HyperOS builds return either for their own installer): from
+            // now on the installer screen is used, which every phone allows.
+            else -> {
+                Settings(context).updateFallback = true
+                if (Updates.foreground) Updates.installFallback(context) else Updates.notifyReady(context)
+            }
         }
     }
 
