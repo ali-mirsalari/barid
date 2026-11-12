@@ -45,9 +45,14 @@ object Banks {
         Bank("resalat", "Resalat", "رسالت", listOf("رسالت"), listOf("ResalatBank")),
         Bank("mehriran", "Mehr Iran", "مهر ایران", listOf("مهر ایران"), listOf("B.QMEHRIRAN")),
         Bank("melal", "Melal", "ملل", listOf("موسسه ملل", "ملل")),
-        Bank("blu", "Blu", "بلو", listOf("بلو بانک", "بلوبانک")),
+        Bank("blu", "Blu", "بلو", listOf("بلو بانک", "بلوبانک", "blu"), listOf("BluBank", "blu")),
         Bank("toseetaavon", "Tosee Taavon", "توسعه تعاون", listOf("توسعه تعاون")),
     )
+
+    /** Latin names ("blu") match in any case as a whole word, so "Blue" or "bluetooth" do not count. */
+    private fun mentions(head: String, name: String): Boolean =
+        if (name.all { it in 'a'..'z' }) Regex("(?<![A-Za-z])$name(?![A-Za-z])", RegexOption.IGNORE_CASE).containsMatchIn(head)
+        else head.contains(name)
 
     fun byCode(code: String?): Bank? = ALL.firstOrNull { it.code == code }
 
@@ -57,7 +62,7 @@ object Banks {
         ALL.firstOrNull { bank -> bank.senders.any { it.equals(s, ignoreCase = true) || s.endsWith(it) && it.all(Char::isDigit) } }?.let { return it }
         val head = normalizedText.lineSequence().take(2).joinToString(" ")
         return ALL.flatMap { bank -> bank.names.map { bank to it } }
-            .filter { (_, name) -> head.contains(name) }
+            .filter { (_, name) -> mentions(head, name) }
             .maxByOrNull { (_, name) -> name.length }?.first
     }
 }

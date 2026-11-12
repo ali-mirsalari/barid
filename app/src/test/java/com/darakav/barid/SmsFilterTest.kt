@@ -1,5 +1,6 @@
 package com.darakav.barid
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -57,6 +58,17 @@ class SmsFilterTest {
         assertTrue(SmsFilter.shouldForward("BankMellat", "بانک ملت\nحساب 1234\n+2,500,000 ریال\n03/14-10:05"))
         assertTrue(SmsFilter.shouldForward("RefahBank", "بانك رفاه\nحساب 112233445\nواریز12,000,000+\nانتقال از حساب 556677889 نام نمونه \nمانده18,250,000\n5/08/14-14:45"))
         assertTrue(SmsFilter.shouldForward("BankX", "بانک ایکس\nصورتحساب کارت\nخرید: 750,000 ریال\nمانده: 4,000,000"))
+    }
+
+    @Test
+    fun recognizesBluBySenderOrLatinHeader() {
+        assertTrue(SmsFilter.shouldForward("BluBank", "۱۰۰,۰۰۰ ریال به حسابت نشست\n1405/07/11 11:45"))
+        assertTrue(SmsFilter.shouldForward("Sender", "blu\n۱۰۰,۰۰۰ ریال به حسابت نشست"))
+        assertTrue(SmsFilter.shouldForward("Sender", "Blu Bank\nخرید ۲۵۰,۰۰۰ ریال"))
+        assertTrue(SmsFilter.shouldForward(null, "بلوبانک\nمبلغ 100,000 ریال به حساب شما نشست\n1405/07/11 11:45"))
+        assertEquals("blu", Banks.detect("blu", "")?.code)
+        assertEquals(null, Banks.detect("Shop", "Bluetooth speaker\n250,000 ریال"))
+        assertFalse(SmsFilter.shouldForward("Shop", "Blue Shop\nخرید ۲۵۰,۰۰۰ ریال"))
     }
 
     @Test
