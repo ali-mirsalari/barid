@@ -1,0 +1,1 @@
+Updates install on every phone: where the silent install is refused (some Xiaomi HyperOS phones), Barid opens the update in the phone's installer screen, so one tap on Install finishes it.
