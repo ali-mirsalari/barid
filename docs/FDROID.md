@@ -67,6 +67,12 @@ CurrentVersionCode: 3
 4. F-Droid's update checker picks up the tag (`UpdateCheckMode: Tags`), builds it and compares the
    result with that APK. Until the APK is attached, F-Droid's build of that version fails.
 
+Until merge request !56871 is merged, step 4 does not happen on its own: the merge request names one
+exact build. After attaching the APK, replace that build in the fork's branch (`alimirsalari/fdroiddata`,
+`com.darakav.barid`) with the new versionName, versionCode and full commit hash, update
+`CurrentVersion`/`CurrentVersionCode`, push, and wait for the pipeline to verify the signature. Then update
+the recipe above to match.
+
 The script's APK for v1.0.2 was checked byte for byte: it is F-Droid's own build plus the signature block.
 Release APKs also leave out the commit hash (`vcsInfo.include = false`, from 1.0.3), so even a build from
 the release branch before its squash merge would match. Do not re-sign an APK by hand with `apksigner`:

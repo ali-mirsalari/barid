@@ -13,6 +13,7 @@ Barid (برید) is an open-source (GPL-3.0) Android app that forwards Iranian b
 - Checks before every commit: `./gradlew testDebugUnitTest assembleDebug lintDebug` (from Iran use the Docker method in README.md). Report failures honestly.
 - Commits: Conventional Commits (`type(scope): summary`), split by feature, no AI attribution. Work on a branch and open a pull request to `main`; do not push to `main` directly once the repository is public. Pull request titles are Conventional Commits too: squash merging makes the title the commit on `main`.
 - Releases: tag the merged commit on `main`, then build and attach the APK with `scripts/release-apk.sh <versionName> --upload` (never from the working tree or a release branch). F-Droid builds the same tag and verifies it against that APK (docs/FDROID.md); release tags `v*` cannot be moved or deleted.
+- While the F-Droid merge request fdroid/fdroiddata!56871 is open, every release also updates its recipe; check its state at each release and ask the owner before pushing. Attach the APK first, then in the fork's branch `com.darakav.barid` replace the single build entry (versionName, versionCode, full commit hash) and `CurrentVersion`/`CurrentVersionCode`, wait for the pipeline to verify the signature, and mirror the recipe in docs/FDROID.md. After the merge F-Droid follows tags on its own.
 
 ## State
 
