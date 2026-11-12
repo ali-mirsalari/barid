@@ -1,0 +1,1 @@
+Wallet, points, discount and cashback notices from payment apps and shops are no longer forwarded, and a "view balance" link alone no longer makes a message look like a bank message.
