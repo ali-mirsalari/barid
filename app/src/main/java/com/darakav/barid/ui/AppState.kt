@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.darakav.barid.ActivityLog
+import com.darakav.barid.BuildConfig
 import com.darakav.barid.Bank
 import com.darakav.barid.Banks
 import com.darakav.barid.LogEntry
@@ -70,7 +71,8 @@ data class Snapshot(
                 update = UpdateState(
                     store = Updates.store(context),
                     auto = settings.autoUpdate,
-                    ready = settings.updateReady,
+                    // Not offered again once installed (the next check also forgets it).
+                    ready = settings.updateReady?.takeIf { Updates.newer(it, BuildConfig.VERSION_NAME) },
                     checkedAt = settings.updateCheckedAt,
                     failed = settings.updateError != null,
                     installAllowed = Updates.installAllowed(context),

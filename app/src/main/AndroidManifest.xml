@@ -66,6 +66,14 @@
             </intent-filter>
         </receiver>
         <receiver android:name=".UpdateReceiver" android:exported="false" />
+        <!-- Hands a downloaded update to the phone's installer screen when a session install is refused. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.updates"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/update_paths" />
+        </provider>
         <!-- Keeps the in-app language choice on Android 12 and older (AppCompat per-app locales). -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"

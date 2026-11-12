@@ -35,6 +35,7 @@ Installed from a GitHub APK, Barid keeps itself up to date (`Updates.kt`). Every
 
 - On Android 12+, once the owner allows Barid to install apps ("Install unknown apps", asked by a Home card), updates install silently (`USER_ACTION_NOT_REQUIRED`, `UPDATE_PACKAGES_WITHOUT_USER_ACTION`).
 - Otherwise Android asks: an "update ready" notification (permission asked by the same card) and a Home card that stays until the update is installed.
+- Where that install is refused or cancelled (Xiaomi HyperOS often replaces Android's installer and keeps asking even after the permission), Barid switches to opening the APK in the phone's installer screen, as a file manager would; every phone allows that. One tap on Install is then always needed.
 
 Settings has "Update automatically" (on by default) and "Check for updates". When a store installed Barid (F-Droid and its clients, Obtainium, Google Play, Bazaar, Myket), the updater is off and the store updates it. Releases must keep the tag `v<versionName>` and the asset name `barid-<versionName>.apk`.
 

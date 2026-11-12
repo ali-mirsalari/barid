@@ -73,6 +73,11 @@ class Settings(context: Context) {
         get() = prefs.getString("updateReady", null)
         set(value) = prefs.edit { if (value == null) remove("updateReady") else putString("updateReady", value) }
 
+    /** This phone refused a session install (seen on Xiaomi HyperOS): use the installer screen. */
+    var updateFallback: Boolean
+        get() = prefs.getBoolean("updateFallback", false)
+        set(value) = prefs.edit { putBoolean("updateFallback", value) }
+
     var updateCheckedAt: Long
         get() = prefs.getLong("updateCheckedAt", 0)
         set(value) = prefs.edit { putLong("updateCheckedAt", value) }
