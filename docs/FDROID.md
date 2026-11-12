@@ -60,15 +60,18 @@ CurrentVersionCode: 3
    locales. Merge the pull request.
 2. Tag the merged commit on `main` (`v<versionName>`) and push the tag. Release tags (`v*`) are protected
    by a GitHub ruleset: they cannot be moved or deleted, because F-Droid builds exactly the tagged commit.
-3. Build the APK from the tag, signed by Gradle with `keystore.properties` (`./gradlew assembleRelease`,
-   README), and attach it to the GitHub release as `barid-<versionName>.apk`. The file name must match
-   `Binaries`.
+3. Create the GitHub release for the tag, then run `scripts/release-apk.sh <versionName> --upload`. It
+   builds the tag from a clean clone in the README's Docker image, signs it with Gradle and the release
+   key (mounted read-only, never copied), checks the certificate and attaches `dist/barid-<versionName>.apk`
+   to the release. The file name must match `Binaries`.
 4. F-Droid's update checker picks up the tag (`UpdateCheckMode: Tags`), builds it and compares the
    result with that APK. Until the APK is attached, F-Droid's build of that version fails.
 
-Release APKs leave out the commit hash (`vcsInfo.include = false`), so a build from the release branch
-before its squash merge is identical too. Do not re-sign an APK by hand with `apksigner`: it re-aligns
-entries unless given `--alignment-preserved`, and then F-Droid's copy of the signature does not verify.
+The script's APK for v1.0.2 was checked byte for byte: it is F-Droid's own build plus the signature block.
+Release APKs also leave out the commit hash (`vcsInfo.include = false`, from 1.0.3), so even a build from
+the release branch before its squash merge would match. Do not re-sign an APK by hand with `apksigner`:
+it re-aligns entries unless given `--alignment-preserved`, and then F-Droid's copy of the signature does
+not verify.
 
 ## Notes for reviewers
 
