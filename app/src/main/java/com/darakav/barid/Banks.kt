@@ -45,13 +45,16 @@ object Banks {
         Bank("resalat", "Resalat", "رسالت", listOf("رسالت"), listOf("ResalatBank")),
         Bank("mehriran", "Mehr Iran", "مهر ایران", listOf("مهر ایران"), listOf("B.QMEHRIRAN")),
         Bank("melal", "Melal", "ملل", listOf("موسسه ملل", "ملل")),
-        Bank("blu", "Blu", "بلو", listOf("بلو بانک", "بلوبانک", "blu"), listOf("BluBank", "blu")),
+        Bank("blu", "Blu", "بلو", listOf("بلو بانک", "بلوبانک", "بلو", "blu"), listOf("BluBank", "blu")),
         Bank("toseetaavon", "Tosee Taavon", "توسعه تعاون", listOf("توسعه تعاون")),
     )
 
-    /** Latin names ("blu") match in any case as a whole word, so "Blue" or "bluetooth" do not count. */
+    /**
+     * Short names ("بلو", "blu", "ملل") match only as a whole word, Latin ones in any case, so "بلوار",
+     * "Blue" or "بین المللی" do not count.
+     */
     private fun mentions(head: String, name: String): Boolean =
-        if (name.all { it in 'a'..'z' }) Regex("(?<![A-Za-z])$name(?![A-Za-z])", RegexOption.IGNORE_CASE).containsMatchIn(head)
+        if (name.length <= 3) Regex("(?<!\\p{L})${Regex.escape(name)}(?!\\p{L})", RegexOption.IGNORE_CASE).containsMatchIn(head)
         else head.contains(name)
 
     fun byCode(code: String?): Bank? = ALL.firstOrNull { it.code == code }

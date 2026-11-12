@@ -69,6 +69,19 @@ class SmsFilterTest {
         assertEquals("blu", Banks.detect("blu", "")?.code)
         assertEquals(null, Banks.detect("Shop", "Bluetooth speaker\n250,000 ریال"))
         assertFalse(SmsFilter.shouldForward("Shop", "Blue Shop\nخرید ۲۵۰,۰۰۰ ریال"))
+        assertEquals(null, Banks.detect("Shop", "بلوار نمونه\nخرید ۲۵۰,۰۰۰ ریال"))
+    }
+
+    @Test
+    fun bluFromItsMobileShapedLine() {
+        // Blu sends from a 0999 number; synthetic messages in its format.
+        val from = "+989990000000"
+        assertTrue(SmsFilter.shouldForward(from, "بلو\nبرداشت پول\nنمونه عزیز، 5,000,000ریال از حساب شما پرید.\nموجودی: 10,000,000 ریال\n۱۲:۰۳\n۱۴۰۵.۰۸.۲۰"))
+        assertTrue(SmsFilter.shouldForward(from, "بلو\nپرداخت قبض\nنمونه عزیز، 300,000 ریال بابت پرداخت قبض تلفن همراه از حساب شما پرید.\nموجودی: 9,700,000 ریال\n۱۹:۰۶\n۱۴۰۵.۰۸.۲۰"))
+        assertFalse(SmsFilter.shouldForward(from, "مبلغ: 5,000,000 ریال\nرمز: 123456\n12:03"))
+        assertFalse(SmsFilter.shouldForward(from, "بلو\nنمونه عزیز خوش آمدید.\n19:06:10\n1405.08.20"))
+        // A person writing about money is still not forwarded.
+        assertFalse(SmsFilter.shouldForward("09121234567", "واریز کردم 1,000,000 تومان، موجودی رو ببین"))
     }
 
     @Test
