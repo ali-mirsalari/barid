@@ -63,6 +63,30 @@ class Settings(context: Context) {
         get() = prefs.getBoolean("reduceTransparency", false)
         set(value) = prefs.edit { putBoolean("reduceTransparency", value) }
 
+    /** Updates from GitHub releases ([Updates]); on unless the owner turned them off. */
+    var autoUpdate: Boolean
+        get() = prefs.getBoolean("autoUpdate", true)
+        set(value) = prefs.edit { putBoolean("autoUpdate", value) }
+
+    /** A newer version downloaded and verified, waiting to be installed. */
+    var updateReady: String?
+        get() = prefs.getString("updateReady", null)
+        set(value) = prefs.edit { if (value == null) remove("updateReady") else putString("updateReady", value) }
+
+    var updateCheckedAt: Long
+        get() = prefs.getLong("updateCheckedAt", 0)
+        set(value) = prefs.edit { putLong("updateCheckedAt", value) }
+
+    /** "check" or "download" when the last update check failed. */
+    var updateError: String?
+        get() = prefs.getString("updateError", null)
+        set(value) = prefs.edit { if (value == null) remove("updateError") else putString("updateError", value) }
+
+    /** The owner chose "Not now" for the card asking to allow automatic updates. */
+    var updatePromptHidden: Boolean
+        get() = prefs.getBoolean("updatePromptHidden", false)
+        set(value) = prefs.edit { putBoolean("updatePromptHidden", value) }
+
     /** Short, content-free description of the last problem (HTTP status or error type). */
     var lastError: String?
         get() = prefs.getString("lastError", null)

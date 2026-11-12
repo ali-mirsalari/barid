@@ -184,4 +184,27 @@
     <string name="crash_body">Copy this report and send it to the developer. It describes where the error happened; it is kept only on this phone.</string>
     <string name="crash_copy">Copy report</string>
     <string name="crash_continue">Continue</string>
+    <string name="section_updates">Updates</string>
+    <string name="auto_update">Update automatically</string>
+    <string name="auto_update_body">Checks Barid\'s GitHub releases every 12 hours and installs new versions.</string>
+    <string name="check_updates">Check for updates</string>
+    <string name="update_checking">Checking…</string>
+    <string name="update_latest_row">Up to date · checked %1$s ago</string>
+    <string name="update_failed_row">Could not reach GitHub. Barid will try again.</string>
+    <string name="update_ready_row">Version %1$s is ready to install</string>
+    <string name="update_up_to_date">Barid is up to date</string>
+    <string name="update_install_failed">The update could not be started. Barid will try again.</string>
+    <string name="updates_by_store">Updated by your app store</string>
+    <string name="updates_by_store_body">Barid was installed from a store, which keeps it up to date.</string>
+    <string name="update_channel">Updates</string>
+    <string name="update_ready_title">Barid %1$s is ready</string>
+    <string name="update_ready_body">Install it to keep forwarding working with the latest fixes. Your connection and settings stay.</string>
+    <string name="update_ready_notification">Tap to install the update.</string>
+    <string name="action_install_update">Install update</string>
+    <string name="card_updates_title">Keep Barid up to date</string>
+    <string name="card_updates_body">Allow Barid to install its updates and tell you about them, so new versions arrive without opening the app.</string>
+    <string name="action_allow_installs">Allow installing</string>
+    <string name="action_allow_notifications">Allow notifications</string>
+    <string name="action_not_now">Not now</string>
+    <string name="about_privacy_5">To check for updates Barid asks GitHub for its latest release; nothing about you or your messages is sent. You can turn it off in Settings.</string>
 </resources>

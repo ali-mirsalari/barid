@@ -113,6 +113,10 @@ fun SettingsScreen(
     onConnectOther: () -> Unit,
     onEditServer: () -> Unit,
     onDisconnect: () -> Unit,
+    checkingUpdates: Boolean = false,
+    onAutoUpdate: (Boolean) -> Unit = {},
+    onCheckUpdates: () -> Unit = {},
+    onInstallUpdate: () -> Unit = {},
 ) {
     val c = Barid.colors
     var confirm by remember { mutableStateOf(false) }
@@ -181,6 +185,35 @@ fun SettingsScreen(
                 if (pairing != null) {
                     Divider()
                     ListRow(stringResource(R.string.disconnect), titleColor = c.danger, onClick = { confirm = true })
+                }
+            }
+        }
+        item {
+            val update = state.update
+            GlassCard(Modifier.fillMaxWidth()) {
+                SectionLabel(stringResource(R.string.section_updates))
+                if (update.store != null) {
+                    ListRow(stringResource(R.string.updates_by_store), subtitle = stringResource(R.string.updates_by_store_body))
+                } else {
+                    ListRow(
+                        stringResource(R.string.auto_update), subtitle = stringResource(R.string.auto_update_body),
+                        onClick = { onAutoUpdate(!update.auto) },
+                        trailing = { BaridSwitch(update.auto, onAutoUpdate) },
+                    )
+                    Divider()
+                    val ready = update.ready
+                    val subtitle = when {
+                        checkingUpdates -> stringResource(R.string.update_checking)
+                        ready != null -> stringResource(R.string.update_ready_row, Format.ltr(ready))
+                        update.failed -> stringResource(R.string.update_failed_row)
+                        update.checkedAt > 0 -> stringResource(R.string.update_latest_row, Format.ago(update.checkedAt, System.currentTimeMillis()))
+                        else -> stringResource(R.string.version_line, Format.ltr(BuildConfig.VERSION_NAME))
+                    }
+                    ListRow(
+                        stringResource(if (ready != null) R.string.action_install_update else R.string.check_updates), subtitle = subtitle,
+                        onClick = if (checkingUpdates) null else if (ready != null) onInstallUpdate else onCheckUpdates,
+                        trailing = { Icon(BaridIcons.Refresh, null, Modifier.size(16.dp), tint = c.muted) },
+                    )
                 }
             }
         }
@@ -294,7 +327,7 @@ fun AboutScreen(onBack: () -> Unit) {
         item {
             GlassCard(Modifier.fillMaxWidth()) {
                 SectionLabel(stringResource(R.string.section_privacy))
-                listOf(R.string.about_privacy_1, R.string.about_privacy_2, R.string.about_privacy_3, R.string.about_privacy_4).forEach {
+                listOf(R.string.about_privacy_1, R.string.about_privacy_2, R.string.about_privacy_3, R.string.about_privacy_4, R.string.about_privacy_5).forEach {
                     Row(Modifier.padding(horizontal = 16.dp, vertical = 6.dp)) {
                         Icon(BaridIcons.Check, null, Modifier.padding(top = 3.dp).size(16.dp), tint = c.success)
                         Text(stringResource(it), style = MaterialTheme.typography.bodySmall, color = c.text, modifier = Modifier.padding(start = 10.dp))

@@ -27,7 +27,16 @@ Requirements: Android 8.0+ (API 26).
 
 ## Privacy
 
-Barid has no analytics, no ads and no server of its own. Messages go only to the server you connected, over HTTPS (plain HTTP is allowed only so you can test a server on your local network).
+Barid has no analytics, no ads and no server of its own. Messages go only to the server you connected, over HTTPS (plain HTTP is allowed only so you can test a server on your local network). To check for updates it asks GitHub for its latest release (see Updates); that request carries nothing about you or your messages and can be turned off.
+
+## Updates
+
+Installed from a GitHub APK, Barid keeps itself up to date (`Updates.kt`). Every 12 hours (WorkManager; Android also starts Barid for each incoming SMS, so this runs without the app being opened) and when the app opens after six hours, it reads `releases/latest` from the GitHub API. A newer release's `barid-<version>.apk` is downloaded and kept only if it is Barid, has a higher versionCode and is signed with the installed app's key; then it is installed through `PackageInstaller`:
+
+- On Android 12+, once the owner allows Barid to install apps ("Install unknown apps", asked by a Home card), updates install silently (`USER_ACTION_NOT_REQUIRED`, `UPDATE_PACKAGES_WITHOUT_USER_ACTION`).
+- Otherwise Android asks: an "update ready" notification (permission asked by the same card) and a Home card that stays until the update is installed.
+
+Settings has "Update automatically" (on by default) and "Check for updates". When a store installed Barid (F-Droid and its clients, Obtainium, Google Play, Bazaar, Myket), the updater is off and the store updates it. Releases must keep the tag `v<versionName>` and the asset name `barid-<versionName>.apk`.
 
 ## Build
 
