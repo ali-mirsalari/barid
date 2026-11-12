@@ -44,6 +44,10 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
+            // F-Droid rebuilds the tagged commit and must get the same bytes as the signed APK on
+            // GitHub. Leaving the commit hash out keeps a build from the release branch (before its
+            // squash merge) identical to one from the tag.
+            vcsInfo.include = false
         }
         // Optimized like a release (R8, no debugging, Compose's startup profiles applied) but signed
         // with the local debug key, so testers can install it over debug builds. Not for distribution.
