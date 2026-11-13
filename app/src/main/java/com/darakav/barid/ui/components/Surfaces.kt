@@ -43,7 +43,8 @@ import dev.chrisbanes.haze.hazeSource
 val LocalHazeState = compositionLocalOf<HazeState?> { null }
 
 /**
- * Darakav's backdrop: canvas color, four soft aurora glows (brand blue, cyan, the accent and violet)
+ * Darakav's backdrop: canvas color, four soft aurora glows (the theme's two glow hues, the accent and
+ * its faint third hue)
  * and a faint grid that fades out from the top. Hidden when transparency is reduced, as on the website.
  */
 @Composable
@@ -62,10 +63,10 @@ fun Backdrop(hazeState: HazeState?, modifier: Modifier = Modifier) {
             fun glow(color: Color, alpha: Float, x: Float, y: Float, r: Float) = drawRect(
                 Brush.radialGradient(listOf(color.copy(alpha = alpha), Color.Transparent), Offset(x, y), r),
             )
-            glow(BaridColors.BrandBlue, if (c.dark) .34f else .24f, w * .9f, 0f, m * .55f)
-            glow(BaridColors.BrandCyan, if (c.dark) .17f else .22f, 0f, h, m * .55f)
+            glow(c.tones.glowA, if (c.dark) .34f else .24f, w * .9f, 0f, m * .55f)
+            glow(c.tones.glowB, if (c.dark) .17f else .22f, 0f, h, m * .55f)
             glow(c.accent, if (c.dark) .13f else .18f, w * .5f, h * .55f, m * .42f)
-            glow(BaridColors.Violet, if (c.dark) .13f else .1f, w * .1f, h * .12f, m * .3f)
+            glow(c.tones.glowC, if (c.dark) .13f else .1f, w * .1f, h * .12f, m * .3f)
         }
         Canvas(
             Modifier.fillMaxSize()

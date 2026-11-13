@@ -48,7 +48,7 @@ fun WelcomeScreen(onConnect: () -> Unit) {
             Spacer(Modifier.height(40.dp))
             BrandTile(
                 BaridMark, 84.dp,
-                Modifier.shadow(28.dp, RoundedCornerShape(24.dp), ambientColor = BaridColors.BrandBlue, spotColor = BaridColors.BrandBlue),
+                Modifier.shadow(28.dp, RoundedCornerShape(24.dp), ambientColor = c.tones.glowA, spotColor = c.tones.glowA),
                 corner = 24.dp,
             )
             Spacer(Modifier.height(20.dp))

@@ -247,7 +247,8 @@ private fun Swatch(palette: Palette, selected: Boolean, name: String, onClick: (
     val fill = if (palette == Palette.YOU) {
         Brush.sweepGradient(listOf(Color(0xFF3F6837), Color(0xFFB3CF8F), Color(0xFF355F80), Color(0xFFC9A46A), Color(0xFF3F6837)))
     } else {
-        Brush.linearGradient(listOf(if (c.dark) palette.dark else palette.light, if (c.dark) palette.dark else palette.light))
+        // The theme's two glow hues, which now tint the whole app, not only its accent.
+        Brush.linearGradient(listOf(palette.tones.glowA, palette.tones.glowB))
     }
     Box(
         Modifier.size(40.dp)
