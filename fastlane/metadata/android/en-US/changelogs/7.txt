@@ -1,0 +1,1 @@
+Every colour theme now tints the whole app, as on the Darakav website: the background glow, the page and the dark surfaces follow the theme you choose, not only the accent.
