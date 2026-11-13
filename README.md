@@ -21,7 +21,7 @@ Barid is a small Android app that watches incoming SMS, keeps only bank transact
 
 ## Design
 
-Darakav's design language: an aurora backdrop with a faint grid, frosted-glass surfaces (real blur on Android 12+, near-solid below) and Darakav's navy brand tile. Colors: Material You from the wallpaper (Android 12+) or Darakav's presets Slate, Ocean, Iris, Teal, Clay and Forest, in light and dark, plus a Reduce transparency switch. English and Persian with full right-to-left layout, Persian digits and the Jalali calendar, Vazirmatn bundled. Built with Jetpack Compose and Material 3; QR codes are read with CameraX and ZXing, so no Google Play services are needed.
+Darakav's design language: an aurora backdrop with a faint grid, frosted-glass surfaces (real blur on Android 12+, near-solid below) and Darakav's navy brand tile. Colors: Material You from the wallpaper (Android 12+) or Darakav's presets Slate, Ocean, Iris, Teal, Clay and Forest, in light and dark, plus a Reduce transparency switch. As on the website, the chosen theme tints the whole app: the aurora glows, the page canvas, the dark surfaces and the scanner's chrome, not only the accent. English and Persian with full right-to-left layout, Persian digits and the Jalali calendar, Vazirmatn bundled. Built with Jetpack Compose and Material 3; QR codes are read with CameraX and ZXing, so no Google Play services are needed.
 
 Requirements: Android 8.0+ (API 26).
 

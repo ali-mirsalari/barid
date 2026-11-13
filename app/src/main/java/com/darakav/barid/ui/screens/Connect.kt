@@ -59,6 +59,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -92,9 +93,9 @@ import java.util.concurrent.Executors
 private val SheetText = Color(0xFFE7EBF3)
 private val SheetMuted = Color(0xFFAAB4C5)
 
-/** Dark glass over the camera (the camera feed itself cannot be blurred). */
-private fun Modifier.darkGlass(shape: RoundedCornerShape) = this.clip(shape)
-    .background(Color(0xFF141C2A).copy(alpha = .72f))
+/** Dark glass over the camera (the camera feed itself cannot be blurred), in the theme's chrome tone. */
+private fun Modifier.darkGlass(shape: RoundedCornerShape, deep: Color) = this.clip(shape)
+    .background(lerp(deep, Color.White, .06f).copy(alpha = .72f))
     .border(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = .14f), Color.White.copy(alpha = .06f))), shape)
 
 /**
@@ -132,7 +133,8 @@ fun ConnectScreen(canGoBack: Boolean, confirming: Boolean, onBack: () -> Unit, o
         return true
     }
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF060A10))) {
+    val deep = Barid.colors.tones.deep
+    Box(Modifier.fillMaxSize().background(lerp(deep, Color.Black, .6f))) {
         if (cameraAllowed) {
             QrCamera(Modifier.fillMaxSize()) { scanned -> tryPair(scanned, fromScan = true) }
             ScanFrame(Modifier.align(Alignment.Center).padding(bottom = 140.dp))
@@ -150,19 +152,19 @@ fun ConnectScreen(canGoBack: Boolean, confirming: Boolean, onBack: () -> Unit, o
         Column(Modifier.fillMaxWidth().statusBarsPadding().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             if (canGoBack) {
                 Box(
-                    Modifier.size(42.dp).darkGlass(RoundedCornerShape(13.dp)).clickable(role = Role.Button, onClick = onBack),
+                    Modifier.size(42.dp).darkGlass(RoundedCornerShape(13.dp), deep).clickable(role = Role.Button, onClick = onBack),
                     contentAlignment = Alignment.Center,
                 ) { Icon(BaridIcons.Back, stringResource(R.string.cd_back), Modifier.size(20.dp), tint = SheetText) }
             }
             Text(
                 stringResource(R.string.connect_hint),
                 style = MaterialTheme.typography.bodySmall, color = SheetText, textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().darkGlass(RoundedCornerShape(18.dp)).padding(horizontal = 14.dp, vertical = 11.dp),
+                modifier = Modifier.fillMaxWidth().darkGlass(RoundedCornerShape(18.dp), deep).padding(horizontal = 14.dp, vertical = 11.dp),
             )
         }
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().imePadding()
-                .padding(10.dp).darkGlass(RoundedCornerShape(26.dp)).padding(16.dp),
+                .padding(10.dp).darkGlass(RoundedCornerShape(26.dp), deep).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Box(Modifier.align(Alignment.CenterHorizontally).size(36.dp, 4.dp).clip(RoundedCornerShape(4.dp)).background(Color.White.copy(alpha = .25f)))
